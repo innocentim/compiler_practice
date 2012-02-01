@@ -5,6 +5,7 @@
 #include <string>
 #include "common.hpp"
 
+
 struct token_type{
 	Token tok;
 	std::string str;

@@ -1,26 +1,20 @@
-compiler : checker.o main.o misc.o parser.o source.o target.o token.o
-	clang++ -o compiler checker.o main.o misc.o parser.o source.o target.o token.o
+TARGET = compiler_practice
+OBJS = .checker.o .main.o .misc.o .parser.o .source.o .target.o .token.o
+CC = g++
+CPPFLAGS = -Wall `llvm-config --cppflags`
 
-main.o : main.cpp common.hpp token.hpp parser.hpp checker.hpp
-	clang++ -c main.cpp
+all : $(TARGET)
 
-misc.o : misc.cpp misc.hpp
-	clang++ -c misc.cpp
+$(TARGET) : $(OBJS)
+	$(CC) $(CPPFLAGS) -o $@ $(OBJS)
 
-parser.o : parser.cpp misc.hpp common.hpp token.hpp parser.hpp
-	clang++ -c parser.cpp
-
-checker.o : checker.cpp misc.hpp common.hpp checker.hpp
-	clang++ -c checker.cpp
-
-source.o : source.cpp common.hpp misc.hpp parser.hpp
-	clang++ -c source.cpp
-
-target.o : target.cpp common.hpp misc.hpp parser.hpp
-	clang++ `llvm-config --cxxflags` -c target.cpp
-
-token.o : token.cpp misc.hpp token.hpp
-	clang++ -c token.cpp
+.%.o: %.cpp
+	$(CC) $(CPPFLAGS) -c -MMD -o $@ $<; \
+		sed -i -e 's/^\(.*\)\.o:/\1.o $(@:.o=.d):/g' $(@:.o=.d)
 
 clean :
-	rm compiler *.o
+	rm -f $(TARGET) $(OBJS) $(OBJS:.o=.d)
+
+-include $(OBJS:.o=.d)
+
+.PHONY : all clean

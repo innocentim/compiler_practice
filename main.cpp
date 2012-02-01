@@ -5,6 +5,7 @@
 #include "parser.hpp"
 #include "checker.hpp"
 
+
 void init(){
 	init_punc();
 	init_operator();
