@@ -2,47 +2,51 @@
 #include "misc.hpp"
 #include "parser.hpp"
 
-#include <llvm/Function.h>
-//#include <llvm/Analysis/Verifier.h>
-//#include <llvm/ExecutionEngine/GenericValue.h>
-//#include <llvm/ExecutionEngine/JIT.h>
-//#include <llvm/DerivedTypes.h>
-#include <llvm/Support/IRBuilder.h>
-//#include <llvm/Support/raw_ostream.h>
+#include <llvm/LLVMContext.h>
+#include <llvm/Module.h>
 
-#include <cstdio>
-#include <map>
+using namespace llvm;
 
-void Top::emit_target(){
+Module * Top::emit_target(){
+	return NULL;
 };
 
-void Statements::emit_target(){
+BasicBlock * Statements::emit_target(){
+	return NULL;
 };
 
-void Var_def::emit_target(){
+Value * Var_def::emit_target(){
+	return NULL;
 };
 
-void Func_def::emit_target(){
+Function * Func_def::emit_target(){
+	return NULL;
 };
 
-void Factor_const_num::emit_target(){
+Constant * Factor_const_num::emit_target(){
+	return NULL;
 };
 
-void Factor_const_str::emit_target(){
+Constant * Factor_const_str::emit_target(){
+	return NULL;
 };
 
-void Factor_var::emit_target(){
+User * Factor_var::emit_target(){
+	return NULL;
 };
 
-void Factor_call::emit_target(){
+User * Factor_call::emit_target(){
+	return NULL;
 };
 
-void Binary_op::emit_target(){
+User * Binary_op::emit_target(){
+	return NULL;
 };
 
-void If_block::emit_target(){
+Value * If_block::emit_target(){
+	return NULL;
 };
 
-void While_block::emit_target(){
+Value * While_block::emit_target(){
+	return NULL;
 };
-

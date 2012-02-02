@@ -9,4 +9,4 @@ Besides, as a newbie of C++, I use it 'cause LLVM's native interface is in C++, 
 
 code generation : from AST to LLVM IR
 
-LLVM JIT : can it beat traditional static compiling?
+LLVM JIT : can it beat traditional static compilation?

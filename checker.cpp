@@ -1,5 +1,3 @@
-#include <cstdio>
-
 #include "misc.hpp"
 #include "common.hpp"
 #include "checker.hpp"

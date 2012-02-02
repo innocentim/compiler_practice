@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <cstdlib>
 
 #include "common.hpp"
 #include "token.hpp"
@@ -12,9 +13,13 @@ void init(){
 
 Top * top;
 
-int main(){
+int main(int args, char *argv[]){
+	FILE * fin;
+	if (args < 2 || !(fin = fopen(argv[1], "r"))){
+		exit(1);
+	}
 	init();
-	get_tokens("test.in");
+	get_tokens(fin);
 
 //	for (unsigned int i = 0; i < tokens.size(); i++){
 //		printf("%d -> %d -> %s\n", i, tokens[i].tok, tokens[i].str.c_str());
@@ -23,7 +28,7 @@ int main(){
 
 	top = new Top();
 
-	top->emit_source();
+//	top->emit_source();
 	
 	top->check(global);
 

@@ -1,8 +1,11 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
+#include <llvm/Module.h>
 #include <string>
 #include <vector>
+
+using namespace llvm;
 
 struct Context;
 
@@ -62,14 +65,14 @@ enum prim_type{
 
 struct Statement{
 	virtual void emit_source() = 0;
-	virtual void emit_target() = 0;
+	virtual Value * emit_target() = 0;
 	virtual void context_register(Context*) = 0;
 	virtual void check(Context*) = 0;
 };
 
 struct Definition : Statement{
 	virtual void emit_source() = 0;
-	virtual void emit_target() = 0;
+	virtual Value * emit_target() = 0;
 	virtual void check(Context*) = 0;
 	virtual void context_register(Context*) = 0;
 	virtual std::string& get_name() = 0;
@@ -78,7 +81,7 @@ struct Definition : Statement{
 
 struct Expr : Statement{
 	virtual void emit_source() = 0;
-	virtual void emit_target() = 0;
+	virtual Value * emit_target() = 0;
 	virtual void check(Context*) = 0;
 	virtual prim_type _check(Context*) = 0;
 	virtual void context_register(Context*);
@@ -89,7 +92,7 @@ struct Top{
 	
 	Top();
 	virtual void emit_source();
-	virtual void emit_target();
+	virtual Module * emit_target();
 	virtual void check(Context*);
 };
 
@@ -98,7 +101,7 @@ struct Statements{
 
 	Statements();
 	virtual void emit_source();
-	virtual void emit_target();
+	virtual BasicBlock * emit_target();
 	virtual void check(Context*);
 };
 
@@ -108,7 +111,7 @@ struct Var_def : Definition{
 
 	Var_def();
 	virtual void emit_source();
-	virtual void emit_target();
+	virtual Value * emit_target();
 	virtual void check(Context*);
 	virtual void context_register(Context*);
 	virtual std::string& get_name();
@@ -122,7 +125,7 @@ struct Func_def : Definition{
 
 	Func_def();
 	virtual void emit_source();
-	virtual void emit_target();
+	virtual Function * emit_target();
 	virtual void check(Context*);
 	virtual void context_register(Context*);
 	virtual std::string& get_name();
@@ -134,7 +137,7 @@ struct Factor_const_num : Expr{
 
 	Factor_const_num();
 	virtual void emit_source();
-	virtual void emit_target();
+	virtual Constant * emit_target();
 	virtual void check(Context*);
 	virtual prim_type _check(Context*);
 };
@@ -144,7 +147,7 @@ struct Factor_const_str : Expr{
 
 	Factor_const_str();
 	virtual void emit_source();
-	virtual void emit_target();
+	virtual Constant * emit_target();
 	virtual void check(Context*);
 	virtual prim_type _check(Context*);
 };
@@ -154,7 +157,7 @@ struct Factor_var : Expr{
 
 	Factor_var();
 	virtual void emit_source();
-	virtual void emit_target();
+	virtual User * emit_target();
 	virtual void check(Context*);
 	virtual prim_type _check(Context*);
 };
@@ -165,7 +168,7 @@ struct Factor_call : Expr{
 
 	Factor_call();
 	virtual void emit_source();
-	virtual void emit_target();
+	virtual User * emit_target();
 	virtual void check(Context*);
 	virtual prim_type _check(Context*);
 };
@@ -177,7 +180,7 @@ struct Binary_op : Expr{
 
 	Binary_op();
 	virtual void emit_source();
-	virtual void emit_target();
+	virtual User * emit_target();
 	virtual void check(Context*);
 	virtual prim_type _check(Context*);
 };
@@ -188,7 +191,7 @@ struct If_block : Statement{
 
 	If_block();
 	virtual void emit_source();
-	virtual void emit_target();
+	virtual Value * emit_target();
 	virtual void context_register(Context*);
 	virtual void check(Context*);
 };
@@ -199,7 +202,7 @@ struct While_block : Statement{
 
 	While_block();
 	virtual void emit_source();
-	virtual void emit_target();
+	virtual Value * emit_target();
 	virtual void context_register(Context*);
 	virtual void check(Context*);
 };

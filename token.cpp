@@ -94,8 +94,7 @@ void init_punc(){
 	punc_map->set("/*", tok_punc_slashstar);
 };
 
-void get_tokens(const char * filepath){
-	FILE * fin = fopen(filepath, "r");
+void get_tokens(FILE * fin){
 	int last = ' ';
 	while (1){
 		tokens.push_back(token_type());

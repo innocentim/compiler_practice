@@ -1,10 +1,10 @@
 #ifndef __TOKEN_H__
 #define __TOKEN_H__
 
+#include "common.hpp"
 #include <vector>
 #include <string>
-#include "common.hpp"
-
+#include <cstdlib>
 
 struct token_type{
 	Token tok;
@@ -15,7 +15,7 @@ struct token_type{
 
 void init_punc();
 
-void get_tokens(const char *);
+void get_tokens(FILE *);
 
 extern std::vector<token_type> tokens;
 

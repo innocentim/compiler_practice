@@ -1,15 +1,16 @@
 TARGET = compiler_practice
 OBJS = checker.o main.o misc.o parser.o source.o target.o token.o
 CC = clang++
-CPPFLAGS = -Wall `llvm-config --cppflags` -Qunused-arguments
+CFLAGS = -Wall `llvm-config --cppflags`
+LFLAGS = -WALL `llvm-config --ldflags --libs core`
 
 all : $(TARGET)
 
 $(TARGET) : $(OBJS)
-	$(CC) $(CPPFLAGS) -o $@ $(OBJS)
+	@$(CC) -o $@ $(OBJS) $(LFLAGS)
 
 $(OBJS) :
-	$(CC) $(CPPFLAGS) -c -MMD $(@:.o=.cpp); \
+	@$(CC) $(CFLAGS) -c -MMD $(@:.o=.cpp); \
 	sed -i -e 's/^\(.*\)\.o:/\1.o $(@:.o=.d):/g' $(@:.o=.d)
 
 clean :
