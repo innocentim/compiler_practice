@@ -1,3 +1,7 @@
+void work(){
+	int b;
+	main();
+};
 int main(){
 	int a;
 	int b;

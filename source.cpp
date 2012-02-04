@@ -16,6 +16,11 @@ void Top::emit_source(){
 
 void Statements::emit_source(){
 	iden++;
+	for (unsigned int i = 0, e = defs.size(); i < e; i++){
+		print_iden(iden);
+		defs[i]->emit_source();
+		printf("\n");
+	}
 	for (unsigned int i = 0, e = stmts.size(); i < e; i++){
 		print_iden(iden);
 		stmts[i]->emit_source();

@@ -51,7 +51,6 @@ Var_def::Var_def(){
 		}
 		context->var_tbl.insert(std::pair<std::string, Var_def*>(get_name(), this));
 	}
-	printf("%s %s\n", type_str.c_str(), name.c_str());
 };
 
 Factor_const_num::Factor_const_num(){
@@ -303,8 +302,7 @@ Type Factor_call::get_type(){
 			continue;
 		}
 
-		// TODO not good;
-		Func_def * F = (Func_def*)(cur->func_tbl[name]);
+		Func_def * F = cur->func_tbl[name];
 		if (args.size() != F->args.size()){
 			error("number of arguments error");
 		}

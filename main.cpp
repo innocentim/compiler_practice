@@ -38,7 +38,7 @@ int main(int args, char *argv[]){
 //	}
 //	printf("\n");
 	top = new Top();
-	top->emit_source();
-//	top->emit_target();
+//	top->emit_source();
+	top->emit_target();
 	return 0;
 };

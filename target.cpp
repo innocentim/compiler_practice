@@ -1,17 +1,24 @@
 #include "common.hpp"
 
-#include <map>
 #include <llvm/DerivedTypes.h>
 #include <llvm/LLVMContext.h>
 #include <llvm/Module.h>
 #include <llvm/Operator.h>
+#include <map>
+#include <cstdio>
 
 llvm::Module * global_module;
 llvm::Type * type_map_l[type_invalid + 1] = {NULL};
 prim_type type_ref_map_l[type_invalid + 1];
 
 
+void init_target();
 llvm::Module * Top::emit_target(){
+	init_target();
+	for (unsigned int i = 0, e = defs.size(); i < e; i++){
+		defs[i]->emit_target();
+	}
+	global_module->dump();
 	return global_module;
 };
 
