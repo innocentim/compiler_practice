@@ -1,9 +1,9 @@
 #include "common.hpp"
 #include "misc.hpp"
 #include "parser.hpp"
-
 #include <cstdio>
 
+extern token_type * operator_map[];
 unsigned int iden;
 
 void Top::emit_source(){
@@ -25,18 +25,21 @@ void Statements::emit_source(){
 };
 
 void Var_def::emit_source(){
-	printf("%s %s", type.c_str(), name.c_str());
+	printf("%s %s", type_str.c_str(), name.c_str());
 };
 
 void Factor_const_num::emit_source(){
 	printf("%u", value);
 };
+
 void Factor_const_str::emit_source(){
 	printf("\"%s\"", value.c_str());
 };
+
 void Factor_var::emit_source(){
 	printf("%s", name.c_str());
 };
+
 void Factor_call::emit_source(){
 	printf("%s(", name.c_str());
 	if (args.size() > 0){
@@ -47,6 +50,7 @@ void Factor_call::emit_source(){
 	}
 	printf(")");
 };
+
 void Binary_op::emit_source(){
 	printf("(");
 	left->emit_source();
@@ -54,6 +58,7 @@ void Binary_op::emit_source(){
 	right->emit_source();
 	printf(")");
 };
+
 void If_block::emit_source(){
 	printf("if (");
 	condition->emit_source();
@@ -67,6 +72,7 @@ void If_block::emit_source(){
 		printf("}");
 	}
 };
+
 void While_block::emit_source(){
 	printf("while (");
 	condition->emit_source();
@@ -75,6 +81,7 @@ void While_block::emit_source(){
 	print_iden(iden);
 	printf("}");
 };
+
 void Func_def::emit_source(){
 	ret_var->emit_source();
 	printf("(");
@@ -89,4 +96,3 @@ void Func_def::emit_source(){
 	stmts->emit_source();
 	printf("};\n");
 };
-

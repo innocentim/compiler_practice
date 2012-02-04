@@ -2,10 +2,9 @@
 #define __COMMON_H__
 
 #include <llvm/Module.h>
+#include <llvm/Operator.h>
 #include <string>
 #include <vector>
-
-using namespace llvm;
 
 struct Context;
 
@@ -55,36 +54,31 @@ enum Token{
 	tok_invalid,
 };
 
-enum prim_type{
+typedef enum prim_type{
 	type_void,
 	type_int,
 	type_str,
+	type_int_ref,
+	type_str_ref,
 	type_invalid,
-};
-
+}Type;
 
 struct Statement{
 	virtual void emit_source() = 0;
-	virtual Value * emit_target() = 0;
-	virtual void context_register(Context*) = 0;
-	virtual void check(Context*) = 0;
+	virtual llvm::Value * emit_target() = 0;
 };
 
-struct Definition : Statement{
+struct Definition{
 	virtual void emit_source() = 0;
-	virtual Value * emit_target() = 0;
-	virtual void check(Context*) = 0;
-	virtual void context_register(Context*) = 0;
+	virtual llvm::Value * emit_target() = 0;
 	virtual std::string& get_name() = 0;
-	virtual prim_type get_type() = 0;
+	virtual Type get_type() = 0;
 };
 
-struct Expr : Statement{
+struct Expr : public Statement{
 	virtual void emit_source() = 0;
-	virtual Value * emit_target() = 0;
-	virtual void check(Context*) = 0;
-	virtual prim_type _check(Context*) = 0;
-	virtual void context_register(Context*);
+	virtual llvm::Value * emit_target() = 0;
+	virtual Type get_type() = 0;
 };
 
 struct Top{
@@ -92,119 +86,110 @@ struct Top{
 	
 	Top();
 	virtual void emit_source();
-	virtual Module * emit_target();
-	virtual void check(Context*);
+	virtual llvm::Module * emit_target();
 };
 
 struct Statements{
 	std::vector<Statement*> stmts;
+	std::vector<Definition*> defs;
 
 	Statements();
 	virtual void emit_source();
-	virtual BasicBlock * emit_target();
-	virtual void check(Context*);
+	virtual llvm::BasicBlock * emit_target();
 };
 
-struct Var_def : Definition{
-	std::string type;
+struct Var_def : public Definition{
+	std::string type_str;
+	Type type;
 	std::string name;
 
 	Var_def();
 	virtual void emit_source();
-	virtual Value * emit_target();
-	virtual void check(Context*);
-	virtual void context_register(Context*);
-	virtual std::string& get_name();
-	virtual prim_type get_type();
+	virtual llvm::Value * emit_target();
+	virtual std::string& get_name(){
+		return name;
+	};
+	virtual Type get_type();
 };
 
-struct Func_def : Definition{
+struct Func_def : public Definition{
 	Var_def * ret_var;
 	std::vector<Var_def*> args;
 	Statements * stmts;
 
 	Func_def();
 	virtual void emit_source();
-	virtual Function * emit_target();
-	virtual void check(Context*);
-	virtual void context_register(Context*);
-	virtual std::string& get_name();
-	virtual prim_type get_type();
+	virtual llvm::Function * emit_target();
+	virtual std::string& get_name(){
+		return ret_var->name;
+	};
+	virtual Type get_type();
 };
 
-struct Factor_const_num : Expr{
+struct Factor_const_num : public Expr{
 	unsigned int value;
 
 	Factor_const_num();
 	virtual void emit_source();
-	virtual Constant * emit_target();
-	virtual void check(Context*);
-	virtual prim_type _check(Context*);
+	virtual llvm::Constant * emit_target();
+	virtual Type get_type();
 };
 
-struct Factor_const_str : Expr{
+struct Factor_const_str : public Expr{
 	std::string value;
 
 	Factor_const_str();
 	virtual void emit_source();
-	virtual Constant * emit_target();
-	virtual void check(Context*);
-	virtual prim_type _check(Context*);
+	virtual llvm::Constant * emit_target();
+	virtual Type get_type();
 };
 
-struct Factor_var : Expr{
+struct Factor_var : public Expr{
 	std::string name;
 
 	Factor_var();
 	virtual void emit_source();
-	virtual User * emit_target();
-	virtual void check(Context*);
-	virtual prim_type _check(Context*);
+	virtual llvm::User * emit_target();
+	virtual Type get_type();
 };
 
-struct Factor_call : Expr{
+struct Factor_call : public Expr{
 	std::string name;
 	std::vector<std::string> args;
 
 	Factor_call();
 	virtual void emit_source();
-	virtual User * emit_target();
-	virtual void check(Context*);
-	virtual prim_type _check(Context*);
+	virtual llvm::User * emit_target();
+	virtual Type get_type();
 };
 
-struct Binary_op : Expr{
+struct Binary_op : public Expr{
 	Token op;
 	Expr * left;
 	Expr * right;
 
-	Binary_op();
+	Binary_op() : op(tok_invalid), left(NULL), right(NULL){};
 	virtual void emit_source();
-	virtual User * emit_target();
-	virtual void check(Context*);
-	virtual prim_type _check(Context*);
+	virtual llvm::Operator * emit_target();
+	virtual Type get_type();
 };
 
-struct If_block : Statement{
+struct If_block : public Statement{
 	Expr * condition;
 	Statements * stmts_true, * stmts_false;
 
 	If_block();
 	virtual void emit_source();
-	virtual Value * emit_target();
-	virtual void context_register(Context*);
-	virtual void check(Context*);
+	virtual llvm::Value * emit_target();
 };
 
-struct While_block : Statement{
+struct While_block : public Statement{
 	Expr * condition;
 	Statements * stmts;
 
 	While_block();
 	virtual void emit_source();
-	virtual Value * emit_target();
-	virtual void context_register(Context*);
-	virtual void check(Context*);
+	virtual llvm::Value * emit_target();
 };
 
 #endif

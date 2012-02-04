@@ -9,14 +9,6 @@
 struct token_type{
 	Token tok;
 	std::string str;
-	
-	void print();
 };
-
-void init_punc();
-
 void get_tokens(FILE *);
-
-extern std::vector<token_type> tokens;
-
 #endif

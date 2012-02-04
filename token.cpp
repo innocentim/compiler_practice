@@ -5,7 +5,9 @@
 
 #define STRING_END -2
 
-std::vector<token_type> tokens;
+struct dict_tree;
+extern std::vector<token_type> tokens;
+static dict_tree * punc_map;
 
 struct dict_tree{
 	dict_tree * out[256];
@@ -56,8 +58,6 @@ int get_escaped_char(FILE * fin, int end){
 	return now;
 };
 
-dict_tree * punc_map;
-
 void init_punc(){
 	punc_map = new dict_tree();
 	punc_map->set("+", tok_punc_plus);
@@ -95,6 +95,7 @@ void init_punc(){
 };
 
 void get_tokens(FILE * fin){
+	init_punc();
 	int last = ' ';
 	while (1){
 		tokens.push_back(token_type());
@@ -192,8 +193,4 @@ void get_tokens(FILE * fin){
 			}
 		}
 	}
-};
-
-void token_type::print(){
-
 };

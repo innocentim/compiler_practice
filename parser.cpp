@@ -1,13 +1,26 @@
-#include <cstdlib>
-#include <cstdio>
-
 #include "misc.hpp"
 #include "common.hpp"
 #include "token.hpp"
 #include "parser.hpp"
+#include <vector>
+#include <cstdlib>
+#include <cstdio>
 
-unsigned int current = 0;
-Operator * operator_map[tok_invalid + 1];
+extern Operator * operator_map[];
+extern std::vector<token_type> tokens;
+extern std::map<std::string, Type> type_map;
+static unsigned int current;
+static Context * context = NULL;
+static std::vector<Context*> context_stack;
+
+void context_push(){
+	context_stack.push_back(context = new Context(context));
+};
+
+void context_pop(){
+	context = context_stack.back();
+	context_stack.pop_back();
+};
 
 token_type lookahead(unsigned int i){
 	if (current + i < tokens.size()){
@@ -22,13 +35,22 @@ void eat(Token tok){
 	}else{
 		error("expected");
 	}
-}
+};
 
 Var_def::Var_def(){
-	type = lookahead(0).str;
+	if (type_map.count(lookahead(0).str) > 0){
+		type_str = lookahead(0).str;
+		type = type_map[lookahead(0).str];
+	}
 	eat(tok_identifier);
 	name = lookahead(0).str;
 	eat(tok_identifier);
+	if (name != "void"){
+		if (context->str_tbl.count(get_name())){
+			error("duplicated function definition");
+		}
+		context->str_tbl.insert(std::pair<std::string, Definition*>(get_name(), this));
+	}
 };
 
 Factor_const_num::Factor_const_num(){
@@ -63,12 +85,6 @@ Factor_call::Factor_call(){
 	eat(tok_punc_rparen);
 };
 
-Binary_op::Binary_op(){
-	op = tok_invalid;
-	left = NULL;
-	right = NULL;
-};
-
 Expr * parse_expr();
 Expr * parse_factor(){
 	Expr * ret;
@@ -85,8 +101,8 @@ Expr * parse_factor(){
 		return ret;
 	case tok_const_num:
 		return new Factor_const_num();
-//	case tok_const_str:
-//		return new Factor_const_str();
+	case tok_const_str:
+		return new Factor_const_str();
 	default:
 		return NULL;
 	}
@@ -110,6 +126,7 @@ Expr * parse_expr(){
 	while (1){
 		Binary_op * _new = new Binary_op();
 		if (operator_map[lookahead(0).tok] == NULL){
+			ret->get_type();
 			return ret;
 		}
 		_new->op = lookahead(0).tok;
@@ -162,6 +179,8 @@ While_block::While_block(){
 };
 
 Func_def::Func_def(){
+	Context * con_temp = context;
+	context_push();
 	ret_var = new Var_def();
 	eat(tok_punc_lparen);
 	if (lookahead(0).tok != tok_punc_rparen){
@@ -174,12 +193,21 @@ Func_def::Func_def(){
 		}
 	}
 	eat(tok_punc_rparen);
+	if (context->str_tbl.count(get_name())){
+		error("duplicated function definition");
+	}
+	Context * con_temp2 = context;
+	context = con_temp;
+	context->str_tbl.insert(std::pair<std::string, Definition*>(get_name(), this));
+	context = con_temp2;
 	eat(tok_punc_lbrace);
 	stmts = new Statements();
 	eat(tok_punc_rbrace);
+	context_pop();
 };
 
 Top::Top(){
+	context_push();
 	Definition * temp;
 	while (1){
 		switch (lookahead(0).tok){
@@ -190,60 +218,101 @@ Top::Top(){
 				} else {
 					temp = new Var_def();
 				}
+			} else {
+				error("definition expected!");
 			}
 			break;
 		default:
-			temp = NULL;
-			break;
-		}
-		if (temp == NULL){
-			break;
+			goto _out;
 		}
 		defs.push_back(temp);
 	}
+_out:
+	context_pop();
 };
 
 Statements::Statements(){
-	Statement * temp;
 	while (1){
 		switch (lookahead(0).tok){
 		case tok_identifier:
 			if (lookahead(1).tok == tok_identifier){
-				temp = new Var_def();
+				if (lookahead(2).tok == tok_punc_lparen){
+					defs.push_back(new Func_def());
+				} else {
+					defs.push_back(new Var_def());
+				}
 			} else {
-				temp = parse_expr();
+				stmts.push_back(parse_expr());
 			}
 			break;
 		case tok_kw_if:
-			temp = new If_block();
+			stmts.push_back(new If_block());
 			break;
 		case tok_kw_while:
-			temp = new While_block();
+			stmts.push_back(new While_block());
 			break;
 		default:
-			temp = NULL;
-			break;
+			goto _out;
 		}
-		if (temp == NULL){
-			break;
-		}
-		stmts.push_back(temp);
+	}
+_out:
+	return;
+};
+
+Type Binary_op::get_type(){
+	Type ret = left->get_type();
+	if (ret != right->get_type()){
+		error("type check error");
+	}
+	return ret;
+};
+
+Type Var_def::get_type(){
+	return type;
+};
+
+Type Func_def::get_type(){
+	if (ret_var == NULL){
+		return type_void;
+	} else {
+		return ret_var->get_type();
 	}
 };
 
-Operator::Operator(Token _tok, const std::string & _str, unsigned int _left_unary, unsigned int _right_unary, unsigned int _eye, bool _left_associative) : tok(_tok), str(_str), left_unary(_left_unary), right_unary(_right_unary), eye(_eye), left_associative(_left_associative){};
-
-void op_register(Token tok, const std::string & str, unsigned int left_unary, unsigned int right_unary, unsigned int eye, bool left_associative){
-	operator_map[tok] = new Operator(tok, str, left_unary, right_unary, eye, left_associative);
+Type Factor_const_num::get_type(){
+	return type_int;
 };
 
-void init_operator(){
-	for (unsigned int i = 0; i <tok_invalid + 1; i++){
-		operator_map[i] = NULL;
+Type Factor_const_str::get_type(){
+	return type_str;
+};
+
+Type Factor_var::get_type(){
+	if (context->str_tbl.count(name) == 0){
+		error("var undefined");
 	}
-	op_register(tok_punc_plus, "+", 10, 0, 2, true);
-	op_register(tok_punc_minus, "-", 10, 0, 2, true);
-	op_register(tok_punc_star, "*", 10, 10, 3, true);
-	op_register(tok_punc_slash, "/", 0, 0, 3, true);
-	op_register(tok_punc_equ, "=", 0, 0, 1, false);
+	return context->str_tbl[name]->get_type();
+};
+
+Type Factor_call::get_type(){
+	Context * cur = context;
+	while (cur != NULL){
+		if (!cur->str_tbl.count(name)){
+			cur = cur->father;
+			continue;
+		}
+
+		// not good;
+		Func_def * F = (Func_def*)(cur->str_tbl[name]);
+		if (args.size() != F->args.size()){
+			error("number of arguments error");
+		}
+		for (unsigned int i = 0, e = args.size(); i < e; i++){
+			if (cur->str_tbl[args[i]]->get_type() != F->args[i]->get_type()){
+				error("type check error");
+			}
+		}
+		return cur->str_tbl[name]->get_type();
+	}
+	return type_invalid;
 };
