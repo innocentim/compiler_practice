@@ -46,11 +46,12 @@ Var_def::Var_def(){
 	name = lookahead(0).str;
 	eat(tok_identifier);
 	if (name != "void"){
-		if (context->str_tbl.count(get_name())){
-			error("duplicated function definition");
+		if (context->var_tbl.count(get_name())){
+			error("duplicated var definition");
 		}
-		context->str_tbl.insert(std::pair<std::string, Definition*>(get_name(), this));
+		context->var_tbl.insert(std::pair<std::string, Var_def*>(get_name(), this));
 	}
+	printf("%s %s\n", type_str.c_str(), name.c_str());
 };
 
 Factor_const_num::Factor_const_num(){
@@ -193,12 +194,12 @@ Func_def::Func_def(){
 		}
 	}
 	eat(tok_punc_rparen);
-	if (context->str_tbl.count(get_name())){
+	if (context->func_tbl.count(get_name())){
 		error("duplicated function definition");
 	}
 	Context * con_temp2 = context;
 	context = con_temp;
-	context->str_tbl.insert(std::pair<std::string, Definition*>(get_name(), this));
+	context->func_tbl.insert(std::pair<std::string, Func_def*>(get_name(), this));
 	context = con_temp2;
 	eat(tok_punc_lbrace);
 	stmts = new Statements();
@@ -288,31 +289,31 @@ Type Factor_const_str::get_type(){
 };
 
 Type Factor_var::get_type(){
-	if (context->str_tbl.count(name) == 0){
+	if (context->var_tbl.count(name) == 0){
 		error("var undefined");
 	}
-	return context->str_tbl[name]->get_type();
+	return context->var_tbl[name]->get_type();
 };
 
 Type Factor_call::get_type(){
 	Context * cur = context;
 	while (cur != NULL){
-		if (!cur->str_tbl.count(name)){
+		if (!cur->func_tbl.count(name)){
 			cur = cur->father;
 			continue;
 		}
 
-		// not good;
-		Func_def * F = (Func_def*)(cur->str_tbl[name]);
+		// TODO not good;
+		Func_def * F = (Func_def*)(cur->func_tbl[name]);
 		if (args.size() != F->args.size()){
 			error("number of arguments error");
 		}
 		for (unsigned int i = 0, e = args.size(); i < e; i++){
-			if (cur->str_tbl[args[i]]->get_type() != F->args[i]->get_type()){
+			if (cur->func_tbl[args[i]]->get_type() != F->args[i]->get_type()){
 				error("type check error");
 			}
 		}
-		return cur->str_tbl[name]->get_type();
+		return cur->func_tbl[name]->get_type();
 	}
 	return type_invalid;
 };

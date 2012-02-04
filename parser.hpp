@@ -19,7 +19,8 @@ struct Operator{
 
 struct Context{
 	Context * father;
-	std::map<std::string, Definition*> str_tbl;
+	std::map<std::string, Var_def*> var_tbl;
+	std::map<std::string, Func_def*> func_tbl;
 
 	Context(Context * _father) : father(_father) {};
 };
