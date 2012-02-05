@@ -1,3 +1,4 @@
+int test
 void work(){
 	int b;
 	main();

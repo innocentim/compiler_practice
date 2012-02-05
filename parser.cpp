@@ -1,7 +1,7 @@
-#include "misc.hpp"
 #include "common.hpp"
-#include "token.hpp"
 #include "parser.hpp"
+#include "misc.hpp"
+#include "token.hpp"
 #include <vector>
 #include <cstdlib>
 #include <cstdio>
@@ -208,15 +208,14 @@ Func_def::Func_def(){
 
 Top::Top(){
 	context_push();
-	Definition * temp;
 	while (1){
 		switch (lookahead(0).tok){
 		case tok_identifier:
 			if (lookahead(1).tok == tok_identifier){
 				if (lookahead(2).tok == tok_punc_lparen){
-					temp = new Func_def();
+					funcs.push_back(new Func_def());
 				} else {
-					temp = new Var_def();
+					vars.push_back(new Var_def());
 				}
 			} else {
 				error("definition expected!");
@@ -225,7 +224,6 @@ Top::Top(){
 		default:
 			goto _out;
 		}
-		defs.push_back(temp);
 	}
 _out:
 	context_pop();
@@ -237,9 +235,9 @@ Statements::Statements(){
 		case tok_identifier:
 			if (lookahead(1).tok == tok_identifier){
 				if (lookahead(2).tok == tok_punc_lparen){
-					defs.push_back(new Func_def());
+					funcs.push_back(new Func_def());
 				} else {
-					defs.push_back(new Var_def());
+					vars.push_back(new Var_def());
 				}
 			} else {
 				stmts.push_back(parse_expr());

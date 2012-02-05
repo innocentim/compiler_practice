@@ -1,7 +1,6 @@
-#include <cstdio>
-
 #include "misc.hpp"
 #include "token.hpp"
+#include <cstdio>
 
 #define STRING_END -2
 

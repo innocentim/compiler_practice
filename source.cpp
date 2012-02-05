@@ -4,21 +4,29 @@
 #include <cstdio>
 
 extern token_type * operator_map[];
-unsigned int iden;
+static unsigned int iden;
 
 void Top::emit_source(){
 	iden = 0;
-	for (unsigned int i = 0, e = defs.size(); i < e; i++){
-		defs[i]->emit_source();
+	for (unsigned int i = 0, e = vars.size(); i < e; i++){
+		vars[i]->emit_source();
+		printf("\n");
+	}
+	for (unsigned int i = 0, e = funcs.size(); i < e; i++){
+		funcs[i]->emit_source();
 		printf("\n");
 	}
 };
 
 void Statements::emit_source(){
 	iden++;
-	for (unsigned int i = 0, e = defs.size(); i < e; i++){
+	for (unsigned int i = 0, e = vars.size(); i < e; i++){
 		print_iden(iden);
-		defs[i]->emit_source();
+		vars[i]->emit_source();
+		printf("\n");
+	}
+	for (unsigned int i = 0, e = funcs.size(); i < e; i++){
+		funcs[i]->emit_source();
 		printf("\n");
 	}
 	for (unsigned int i = 0, e = stmts.size(); i < e; i++){
