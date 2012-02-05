@@ -1,84 +1,85 @@
 #include "common.hpp"
-
 #include <llvm/DerivedTypes.h>
 #include <llvm/LLVMContext.h>
 #include <llvm/Module.h>
-#include <llvm/Operator.h>
-#include <map>
-#include <cstdio>
 
-llvm::Module * global_module;
-llvm::Type * type_map_l[type_invalid + 1] = {NULL};
-prim_type type_ref_map_l[type_invalid + 1];
-
+static llvm::Type * type_map[type_invalid + 1] = {NULL};
+static Type type_ref_map[type_invalid + 1];
+static llvm::Module * module;
 
 void init_target();
 llvm::Module * Top::emit_target(){
 	init_target();
-	for (unsigned int i = 0, e = defs.size(); i < e; i++){
-		defs[i]->emit_target();
+	module = new llvm::Module("compiler_practice", llvm::getGlobalContext());
+	for (unsigned int i = 0, e = vars.size(); i < e; i++){
+		vars[i]->emit_target(NULL);
 	}
-	global_module->dump();
-	return global_module;
+	for (unsigned int i = 0, e = funcs.size(); i < e; i++){
+		funcs[i]->emit_target();
+	}
+	return module;
 };
 
-llvm::BasicBlock * Statements::emit_target(){
-	return NULL;
+void Statements::emit_target(llvm::Function * father){
+	llvm::BasicBlock * block = llvm::BasicBlock::Create(llvm::getGlobalContext());
+	for (unsigned int i = 0, e = vars.size(); i < e; i++){
+		vars[i]->emit_target(block);
+	}
+	for (unsigned int i = 0, e = funcs.size(); i < e; i++){
+		funcs[i]->emit_target();
+	}
+	for (unsigned int i = 0, e = stmts.size(); i < e; i++){
+		stmts[i]->emit_target(block);
+	}
 };
 
-llvm::Value * Var_def::emit_target(){
-	return NULL;
+void Var_def::emit_target(llvm::BasicBlock * father){
+	if (father == NULL){
+		new llvm::GlobalVariable(type_map[type], false, llvm::GlobalValue::CommonLinkage, NULL, name);
+	} else {
+	}
 };
 
-llvm::Function * Func_def::emit_target(){
+void Func_def::emit_target(){
 	std::vector<llvm::Type*> args_type;
 	if (ret_var->type != type_void){
-		args_type.push_back(type_map_l[type_ref_map_l[ret_var->type]]);
+		args_type.push_back(type_map[type_ref_map[ret_var->type]]);
 	}
 	for (unsigned int i = 0, e = args.size(); i < e; i++){
-		args_type.push_back(type_map_l[args[i]->type]);
+		args_type.push_back(type_map[args[i]->type]);
 	}
-	llvm::FunctionType * FT = llvm::FunctionType::get(llvm::Type::getVoidTy(llvm::getGlobalContext()), args_type, false);
-	llvm::Function * F = llvm::Function::Create(FT, llvm::Function::CommonLinkage , ret_var->name, global_module);
-	return F;
+	llvm::FunctionType * ft = llvm::FunctionType::get(llvm::Type::getVoidTy(llvm::getGlobalContext()), args_type, false);
+	stmts->emit_target(llvm::Function::Create(ft, llvm::Function::ExternalLinkage , ret_var->name));
 };
 
-llvm::Constant * Factor_const_num::emit_target(){
-	return NULL;
+void Factor_const_num::emit_target(llvm::BasicBlock * father){
 };
 
-llvm::Constant * Factor_const_str::emit_target(){
-	return NULL;
+void Factor_const_str::emit_target(llvm::BasicBlock * father){
 };
 
-llvm::User * Factor_var::emit_target(){
-	return NULL;
+void Factor_var::emit_target(llvm::BasicBlock * father){
 };
 
-llvm::User * Factor_call::emit_target(){
-	return NULL;
+void Factor_call::emit_target(llvm::BasicBlock * father){
 };
 
-llvm::Operator * Binary_op::emit_target(){
-	return NULL;
+void Binary_op::emit_target(llvm::BasicBlock * father){
 };
 
-llvm::Value * If_block::emit_target(){
-	return NULL;
+void If_block::emit_target(llvm::BasicBlock * father){
 };
 
-llvm::Value * While_block::emit_target(){
-	return NULL;
+void While_block::emit_target(llvm::BasicBlock * father){
 };
 
 void init_target(){
-	global_module = new llvm::Module("", llvm::getGlobalContext());
-	type_map_l[type_void] = llvm::Type::getVoidTy(llvm::getGlobalContext());
-	type_map_l[type_int] = llvm::Type::getInt64Ty(llvm::getGlobalContext());
-	type_map_l[type_str] = llvm::Type::getInt64Ty(llvm::getGlobalContext());
-	type_map_l[type_int_ref] = llvm::Type::getInt64Ty(llvm::getGlobalContext());
-	type_map_l[type_str_ref] = llvm::Type::getInt64Ty(llvm::getGlobalContext());
-	type_ref_map_l[type_void] = type_invalid;
-	type_ref_map_l[type_int] = type_int_ref;
-	type_ref_map_l[type_str] = type_str_ref;
+	type_map[type_void] = llvm::Type::getVoidTy(llvm::getGlobalContext());
+	type_map[type_int] = llvm::Type::getInt32Ty(llvm::getGlobalContext());
+	type_map[type_str] = llvm::Type::getInt8PtrTy(llvm::getGlobalContext());
+	type_map[type_int_ref] = llvm::Type::getInt32PtrTy(llvm::getGlobalContext());
+	type_map[type_str_ref] = llvm::Type::getInt8PtrTy(llvm::getGlobalContext());
+	type_ref_map[type_void] = type_invalid;
+	type_ref_map[type_int] = type_int_ref;
+	type_ref_map[type_str] = type_str_ref;
 };
