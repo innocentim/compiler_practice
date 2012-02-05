@@ -2,7 +2,7 @@
 #define __PARSER_H__
 
 #include "common.hpp"
-#include "token.hpp"
+#include "lexer.hpp"
 #include <map>
 #include <string>
 
@@ -21,6 +21,7 @@ struct Context{
 	Context * father;
 	std::map<std::string, Var_def*> var_tbl;
 	std::map<std::string, Func_def*> func_tbl;
+	std::string llvm_name;
 
 	Context(Context * _father) : father(_father) {};
 };

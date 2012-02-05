@@ -1,5 +1,5 @@
 #include "common.hpp"
-#include "token.hpp"
+#include "lexer.hpp"
 #include "parser.hpp"
 #include <cstdio>
 #include <cstdlib>

@@ -1,7 +1,7 @@
 #include "common.hpp"
 #include "parser.hpp"
 #include "misc.hpp"
-#include "token.hpp"
+#include "lexer.hpp"
 #include <vector>
 #include <cstdlib>
 #include <cstdio>
@@ -11,15 +11,13 @@ extern std::vector<token_type> tokens;
 extern std::map<std::string, Type> type_map;
 static unsigned int current;
 static Context * context = NULL;
-static std::vector<Context*> context_stack;
 
 void context_push(){
-	context_stack.push_back(context = new Context(context));
+	context = new Context(context);
 };
 
 void context_pop(){
-	context = context_stack.back();
-	context_stack.pop_back();
+	context = context->father;
 };
 
 token_type lookahead(unsigned int i){
@@ -286,10 +284,17 @@ Type Factor_const_str::get_type(){
 };
 
 Type Factor_var::get_type(){
-	if (context->var_tbl.count(name) == 0){
-		error("var undefined");
+	Context * cur = context;
+	while (cur != NULL){
+		if (!cur->var_tbl.count(name)){
+			cur = cur->father;
+			continue;
+		}
+		bind = cur->var_tbl[name];
+		return cur->var_tbl[name]->get_type();
 	}
-	return context->var_tbl[name]->get_type();
+	error("var undefined");
+	return type_invalid;
 };
 
 Type Factor_call::get_type(){
@@ -309,7 +314,9 @@ Type Factor_call::get_type(){
 				error("type check error");
 			}
 		}
+		bind = cur->func_tbl[name];
 		return cur->func_tbl[name]->get_type();
 	}
+	error("function can't bind");
 	return type_invalid;
 };

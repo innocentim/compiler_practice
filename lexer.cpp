@@ -1,5 +1,5 @@
 #include "misc.hpp"
-#include "token.hpp"
+#include "lexer.hpp"
 #include <cstdio>
 
 #define STRING_END -2
