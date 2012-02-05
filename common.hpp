@@ -3,21 +3,19 @@
 
 #include <llvm/Module.h>
 #include <llvm/Operator.h>
-#include <string>
 #include <vector>
+#include <string>
 
 struct Context;
 
 enum Token{
 	tok_eof,
-
 	tok_identifier,
 	tok_kw_if,
 	tok_kw_while,
 	tok_kw_else,
 	tok_const_num,
 	tok_const_str,
-
 	tok_punc_plus,
 	tok_punc_minus,
 	tok_punc_star,
@@ -37,52 +35,44 @@ enum Token{
 	tok_punc_greater,
 	tok_punc_greaterequ,
 	tok_punc_exclaimequ,
-
 	tok_punc_lbrace,
 	tok_punc_rbrace,
 	tok_punc_lparen,
 	tok_punc_rparen,
 	tok_punc_lsquare,
 	tok_punc_rsquare,
-
 	tok_punc_dot,
 	tok_punc_comma,
-
 	tok_punc_slashslash,
 	tok_punc_slashstar,
-
 	tok_invalid,
 };
 
-typedef enum prim_type{
+enum Type{
 	type_void,
 	type_int,
 	type_str,
 	type_int_ref,
 	type_str_ref,
 	type_invalid,
-}Type;
+};
 
 struct Statement{
 	virtual void emit_source() = 0;
-	virtual llvm::Value * emit_target() = 0;
-};
-
-struct Definition{
-	virtual void emit_source() = 0;
-	virtual llvm::Value * emit_target() = 0;
-	virtual std::string& get_name() = 0;
-	virtual Type get_type() = 0;
+	virtual void emit_target(llvm::BasicBlock*) = 0;
 };
 
 struct Expr : public Statement{
 	virtual void emit_source() = 0;
-	virtual llvm::Value * emit_target() = 0;
+	virtual void emit_target(llvm::BasicBlock*) = 0;
 	virtual Type get_type() = 0;
 };
 
+struct Func_def;
+struct Var_def;
 struct Top{
-	std::vector<Definition*> defs;
+	std::vector<Var_def*> vars;
+	std::vector<Func_def*> funcs;
 	
 	Top();
 	virtual void emit_source();
@@ -90,36 +80,37 @@ struct Top{
 };
 
 struct Statements{
+	std::vector<Var_def*> vars;
+	std::vector<Func_def*> funcs;
 	std::vector<Statement*> stmts;
-	std::vector<Definition*> defs;
 
 	Statements();
 	virtual void emit_source();
-	virtual llvm::BasicBlock * emit_target();
+	virtual void emit_target(llvm::Function*);
 };
 
-struct Var_def : public Definition{
+struct Var_def{
 	std::string type_str;
 	Type type;
 	std::string name;
 
 	Var_def();
 	virtual void emit_source();
-	virtual llvm::Value * emit_target();
+	virtual void emit_target(llvm::BasicBlock*);
 	virtual std::string& get_name(){
 		return name;
 	};
 	virtual Type get_type();
 };
 
-struct Func_def : public Definition{
+struct Func_def{
 	Var_def * ret_var;
 	std::vector<Var_def*> args;
 	Statements * stmts;
 
 	Func_def();
 	virtual void emit_source();
-	virtual llvm::Function * emit_target();
+	virtual void emit_target();
 	virtual std::string& get_name(){
 		return ret_var->name;
 	};
@@ -131,7 +122,7 @@ struct Factor_const_num : public Expr{
 
 	Factor_const_num();
 	virtual void emit_source();
-	virtual llvm::Constant * emit_target();
+	virtual void emit_target(llvm::BasicBlock*);
 	virtual Type get_type();
 };
 
@@ -140,7 +131,7 @@ struct Factor_const_str : public Expr{
 
 	Factor_const_str();
 	virtual void emit_source();
-	virtual llvm::Constant * emit_target();
+	virtual void emit_target(llvm::BasicBlock*);
 	virtual Type get_type();
 };
 
@@ -149,7 +140,7 @@ struct Factor_var : public Expr{
 
 	Factor_var();
 	virtual void emit_source();
-	virtual llvm::User * emit_target();
+	virtual void emit_target(llvm::BasicBlock*);
 	virtual Type get_type();
 };
 
@@ -159,7 +150,7 @@ struct Factor_call : public Expr{
 
 	Factor_call();
 	virtual void emit_source();
-	virtual llvm::User * emit_target();
+	virtual void emit_target(llvm::BasicBlock*);
 	virtual Type get_type();
 };
 
@@ -170,7 +161,7 @@ struct Binary_op : public Expr{
 
 	Binary_op() : op(tok_invalid), left(NULL), right(NULL){};
 	virtual void emit_source();
-	virtual llvm::Operator * emit_target();
+	virtual void emit_target(llvm::BasicBlock*);
 	virtual Type get_type();
 };
 
@@ -180,7 +171,7 @@ struct If_block : public Statement{
 
 	If_block();
 	virtual void emit_source();
-	virtual llvm::Value * emit_target();
+	virtual void emit_target(llvm::BasicBlock*);
 };
 
 struct While_block : public Statement{
@@ -189,7 +180,7 @@ struct While_block : public Statement{
 
 	While_block();
 	virtual void emit_source();
-	virtual llvm::Value * emit_target();
+	virtual void emit_target(llvm::BasicBlock*);
 };
 
 #endif

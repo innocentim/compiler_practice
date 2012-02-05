@@ -1,15 +1,14 @@
-#include <cstdio>
-#include <cstdlib>
-
 #include "common.hpp"
 #include "token.hpp"
 #include "parser.hpp"
+#include <cstdio>
+#include <cstdlib>
 
 std::map<std::string, Type> type_map;
 Operator * operator_map[tok_invalid + 1] = {NULL};
 std::vector<token_type> tokens;
 
-Top * top;
+static Top * top;
 
 void op_register(Token tok, const std::string & str, unsigned int left_unary, unsigned int right_unary, unsigned int eye, bool left_associative){
 	operator_map[tok] = new Operator(tok, str, left_unary, right_unary, eye, left_associative);
@@ -39,6 +38,6 @@ int main(int args, char *argv[]){
 //	printf("\n");
 	top = new Top();
 //	top->emit_source();
-	top->emit_target();
+	top->emit_target()->dump();
 	return 0;
 };
