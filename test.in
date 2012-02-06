@@ -1,5 +1,6 @@
 int main(){
 	int a;
 	int b;
-	b + '3';
+	main + 3;
+	'3' + b;
 };

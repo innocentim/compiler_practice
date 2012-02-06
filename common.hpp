@@ -59,12 +59,12 @@ enum Type{
 
 struct Statement{
 	virtual void emit_source() = 0;
-	virtual llvm::Value * emit_target(llvm::BasicBlock*) = 0;
+	virtual llvm::Value * emit_target(llvm::Function*) = 0;
 };
 
 struct Expr : public Statement{
 	virtual void emit_source() = 0;
-	virtual llvm::Value * emit_target(llvm::BasicBlock*) = 0;
+	virtual llvm::Value * emit_target(llvm::Function*) = 0;
 	virtual Type get_type() = 0;
 };
 
@@ -93,11 +93,11 @@ struct Var_def{
 	std::string type_str;
 	Type type;
 	std::string name;
-	llvm::User * llvm_bind;
+	llvm::Value * llvm_bind;
 
 	Var_def();
 	virtual void emit_source();
-	virtual void emit_target(llvm::BasicBlock*);
+	virtual void emit_target(llvm::Function*);
 	virtual std::string& get_name(){
 		return name;
 	};
@@ -124,7 +124,7 @@ struct Factor_const_num : public Expr{
 
 	Factor_const_num();
 	virtual void emit_source();
-	virtual llvm::Value* emit_target(llvm::BasicBlock*);
+	virtual llvm::Value* emit_target(llvm::Function*);
 	virtual Type get_type();
 };
 
@@ -133,7 +133,7 @@ struct Factor_const_str : public Expr{
 
 	Factor_const_str();
 	virtual void emit_source();
-	virtual llvm::Value* emit_target(llvm::BasicBlock*);
+	virtual llvm::Value* emit_target(llvm::Function*);
 	virtual Type get_type();
 };
 
@@ -143,7 +143,7 @@ struct Factor_var : public Expr{
 
 	Factor_var();
 	virtual void emit_source();
-	virtual llvm::Value* emit_target(llvm::BasicBlock*);
+	virtual llvm::Value* emit_target(llvm::Function*);
 	virtual Type get_type();
 };
 
@@ -154,7 +154,7 @@ struct Factor_call : public Expr{
 
 	Factor_call();
 	virtual void emit_source();
-	virtual llvm::Value* emit_target(llvm::BasicBlock*);
+	virtual llvm::Value* emit_target(llvm::Function*);
 	virtual Type get_type();
 };
 
@@ -165,7 +165,7 @@ struct Binary_op : public Expr{
 
 	Binary_op() : op(tok_invalid), left(NULL), right(NULL){};
 	virtual void emit_source();
-	virtual llvm::Value* emit_target(llvm::BasicBlock*);
+	virtual llvm::Value* emit_target(llvm::Function*);
 	virtual Type get_type();
 };
 
@@ -175,7 +175,7 @@ struct If_block : public Statement{
 
 	If_block();
 	virtual void emit_source();
-	virtual llvm::Value * emit_target(llvm::BasicBlock*);
+	virtual llvm::Value * emit_target(llvm::Function*);
 };
 
 struct While_block : public Statement{
@@ -184,7 +184,7 @@ struct While_block : public Statement{
 
 	While_block();
 	virtual void emit_source();
-	virtual llvm::Value * emit_target(llvm::BasicBlock*);
+	virtual llvm::Value * emit_target(llvm::Function*);
 };
 
 #endif

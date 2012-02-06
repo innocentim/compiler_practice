@@ -78,17 +78,14 @@ void init_punc(){
 	punc_map->set(">", tok_punc_greater);
 	punc_map->set(">=", tok_punc_greaterequ);
 	punc_map->set("!=", tok_punc_exclaimequ);
-
 	punc_map->set("{", tok_punc_lbrace);
 	punc_map->set("}", tok_punc_rbrace);
 	punc_map->set("(", tok_punc_lparen);
 	punc_map->set(")", tok_punc_rparen);
 	punc_map->set("[", tok_punc_lsquare);
 	punc_map->set("]", tok_punc_rsquare);
-
 	punc_map->set(".", tok_punc_dot);
 	punc_map->set(",", tok_punc_comma);
-
 	punc_map->set("//", tok_punc_slashslash);
 	punc_map->set("/*", tok_punc_slashstar);
 };

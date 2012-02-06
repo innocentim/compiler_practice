@@ -238,6 +238,8 @@ Statements::Statements(){
 					vars.push_back(new Var_def());
 				}
 			} else {
+		case tok_const_num:
+		case tok_const_str:
 				stmts.push_back(parse_expr());
 			}
 			break;
