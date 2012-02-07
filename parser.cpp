@@ -66,14 +66,18 @@ Factor_var::Factor_var(){
 	eat(tok_identifier);
 };
 
+Expr * parse_factor();
 Factor_call::Factor_call(){
 	name = lookahead(0).str;
 	eat(tok_identifier);
 	eat(tok_punc_lparen);
 	if (lookahead(0).tok != tok_punc_rparen){
 		while (1){
-			args.push_back(lookahead(0).str);
-			eat(tok_identifier);
+			Expr * temp;
+			if ((temp = parse_factor()) == NULL){
+				error("factor expected");
+			}
+			args.push_back(temp);
 			if (lookahead(0).tok == tok_punc_rparen){
 				break;
 			}
@@ -312,7 +316,7 @@ Type Factor_call::get_type(){
 			error("number of arguments error");
 		}
 		for (unsigned int i = 0, e = args.size(); i < e; i++){
-			if (cur->func_tbl[args[i]]->get_type() != F->args[i]->get_type()){
+			if (args[i]->get_type() != F->args[i]->get_type()){
 				error("type check error");
 			}
 		}

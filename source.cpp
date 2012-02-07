@@ -57,9 +57,10 @@ void Factor_call::emit_source(){
 	printf("%s(", name.c_str());
 	if (args.size() > 0){
 		for (unsigned int i = 0, e = args.size() - 1; i < e; i++){
-			printf("%s, ", args[i].c_str());
+			args[i]->emit_source();
+			printf(", ");
 		}
-		printf("%s", args.back().c_str());
+		args.back()->emit_source();
 	}
 	printf(")");
 };

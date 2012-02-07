@@ -59,13 +59,13 @@ enum Type{
 
 struct Statement{
 	virtual void emit_source() = 0;
-	virtual llvm::Value * emit_target(llvm::Function*) = 0;
+	virtual llvm::Value * emit_target(llvm::Function*, llvm::Value*) = 0;
 };
 
 struct Definition;
 struct Expr : public Statement{
 	virtual void emit_source() = 0;
-	virtual llvm::Value * emit_target(llvm::Function*) = 0;
+	virtual llvm::Value * emit_target(llvm::Function*, llvm::Value*) = 0;
 	virtual Definition * get_bind() = 0;
 	virtual Type get_type() = 0;
 };
@@ -136,7 +136,7 @@ struct Factor_const_num : public Expr{
 
 	Factor_const_num();
 	virtual void emit_source();
-	virtual llvm::Value* emit_target(llvm::Function*);
+	virtual llvm::Value* emit_target(llvm::Function*, llvm::Value*);
 	virtual Definition* get_bind(){
 		return NULL;
 	};
@@ -148,7 +148,7 @@ struct Factor_const_str : public Expr{
 
 	Factor_const_str();
 	virtual void emit_source();
-	virtual llvm::Value* emit_target(llvm::Function*);
+	virtual llvm::Value* emit_target(llvm::Function*, llvm::Value*);
 	virtual Definition* get_bind(){
 		return NULL;
 	};
@@ -161,7 +161,7 @@ struct Factor_var : public Expr{
 
 	Factor_var();
 	virtual void emit_source();
-	virtual llvm::Value* emit_target(llvm::Function*);
+	virtual llvm::Value* emit_target(llvm::Function*, llvm::Value*);
 	virtual Var_def * get_bind(){
 		return _bind;
 	};
@@ -170,12 +170,12 @@ struct Factor_var : public Expr{
 
 struct Factor_call : public Expr{
 	std::string name;
-	std::vector<std::string> args;
+	std::vector<Expr*> args;
 	Func_def * _bind;
 
 	Factor_call();
 	virtual void emit_source();
-	virtual llvm::Value* emit_target(llvm::Function*);
+	virtual llvm::Value* emit_target(llvm::Function*, llvm::Value*);
 	virtual Func_def * get_bind(){
 		return _bind;
 	};
@@ -189,7 +189,7 @@ struct Binary_op : public Expr{
 
 	Binary_op() : op(tok_invalid), left(NULL), right(NULL){};
 	virtual void emit_source();
-	virtual llvm::Value* emit_target(llvm::Function*);
+	virtual llvm::Value* emit_target(llvm::Function*, llvm::Value*);
 	virtual Definition* get_bind(){
 		return NULL;
 	};
@@ -202,7 +202,7 @@ struct If_block : public Statement{
 
 	If_block();
 	virtual void emit_source();
-	virtual llvm::Value * emit_target(llvm::Function*);
+	virtual llvm::Value * emit_target(llvm::Function*, llvm::Value*);
 };
 
 struct While_block : public Statement{
@@ -211,7 +211,7 @@ struct While_block : public Statement{
 
 	While_block();
 	virtual void emit_source();
-	virtual llvm::Value * emit_target(llvm::Function*);
+	virtual llvm::Value * emit_target(llvm::Function*, llvm::Value*);
 };
 
 #endif

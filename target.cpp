@@ -25,7 +25,6 @@ llvm::Module * Top::emit_target(){
 };
 
 void Statements::emit_target(llvm::Function * father){
-	llvm::BasicBlock::Create(llvm::getGlobalContext(), "", father);
 	for (unsigned int i = 0, e = vars.size(); i < e; i++){
 		vars[i]->emit_target(father);
 	}
@@ -33,7 +32,7 @@ void Statements::emit_target(llvm::Function * father){
 		funcs[i]->emit_target();
 	}
 	for (unsigned int i = 0, e = stmts.size(); i < e; i++){
-		stmts[i]->emit_target(father);
+		stmts[i]->emit_target(father, NULL);
 	}
 	llvm::BasicBlock * block = &father->getBasicBlockList().back();
 	llvm::ReturnInst::Create(llvm::getGlobalContext(), NULL, block);
@@ -62,49 +61,67 @@ void Func_def::emit_target(){
 	if (ret_var->type != type_void){
 		ret_var->_llvm_bind = temp++;
 	}
+	llvm::BasicBlock * block = llvm::BasicBlock::Create(llvm::getGlobalContext(), "", _llvm_bind);
 	for (unsigned int i = 0, e = args.size(); i < e; i++){
-		args[i]->_llvm_bind = temp++;
+		args[i]->emit_target(_llvm_bind);
+		new llvm::StoreInst(temp++, args[i]->_llvm_bind, false, block);
 	}
 	stmts->emit_target(_llvm_bind);
 };
 
-llvm::Value * Factor_const_num::emit_target(llvm::Function * father){
-	return llvm::ConstantInt::get(type_map[type_int], value);
+llvm::Value * Factor_const_num::emit_target(llvm::Function * father, llvm::Value * lvalue){
+	llvm::BasicBlock * block = &father->getBasicBlockList().back();
+	return new llvm::StoreInst(llvm::ConstantInt::get(type_map[type_int], value), lvalue, false, block);
 };
 
-llvm::Value * Factor_const_str::emit_target(llvm::Function * father){
+llvm::Value * Factor_const_str::emit_target(llvm::Function * father, llvm::Value * lvalue){
 	return NULL;
 };
 
-llvm::Value * Factor_var::emit_target(llvm::Function * father){
+llvm::Value * Factor_var::emit_target(llvm::Function * father, llvm::Value * lvalue){
 	llvm::BasicBlock * block = &father->getBasicBlockList().back();
-	return new llvm::LoadInst(_bind->_llvm_bind, "", block);
+	return new llvm::StoreInst(new llvm::LoadInst(_bind->_llvm_bind, "", block), lvalue, false, block);
 };
 
-llvm::Value * Factor_call::emit_target(llvm::Function * father){
-	return NULL;
+llvm::Value * Factor_call::emit_target(llvm::Function * father, llvm::Value * lvalue){
+	llvm::BasicBlock * block = &father->getBasicBlockList().back();
+	std::vector<llvm::Value*> llvm_args;
+	if (_bind->ret_var->type != type_void){
+		if (lvalue == NULL){
+			lvalue = new llvm::AllocaInst(type_map[_bind->ret_var->type], "", block);
+		}
+		llvm_args.push_back(lvalue);
+	}
+	for (unsigned int i = 0, e = args.size(); i < e; i++){
+		llvm::Value * temp = args[i]->emit_target(father, NULL);
+		llvm_args.push_back(temp);
+	}
+	llvm::CallInst::Create(_bind->_llvm_bind, llvm_args, "", block);
+	return new llvm::LoadInst(llvm_args.front(), "", block);
 };
 
-llvm::Value * Binary_op::emit_target(llvm::Function * father){
-	llvm::BasicBlock * block = &father->getBasicBlockList().back();
-	llvm::Value * r = right->emit_target(father);
+llvm::Value * Binary_op::emit_target(llvm::Function * father, llvm::Value * lvalue){
 	if (op != tok_punc_equ){
-		llvm::Value * l = left->emit_target(father);
+		llvm::Value * r = right->emit_target(father, NULL);
+		llvm::Value * l = left->emit_target(father, NULL);
+		llvm::BasicBlock * block = &father->getBasicBlockList().back();
 		return llvm::BinaryOperator::Create(op_map[op], l, r, "", block);
 	} else {
 		Definition * temp = left->get_bind();
 		if (temp == NULL){
 			error("invalid lvalue");
 		}
-		return new llvm::StoreInst(r, temp->get_llvm_bind(), block);
+		llvm::Value * l = temp->get_llvm_bind();
+		right->emit_target(father, l);
+		return l;
 	}
 };
 
-llvm::Value * If_block::emit_target(llvm::Function * father){
+llvm::Value * If_block::emit_target(llvm::Function * father, llvm::Value * lvalue){
 	return NULL;
 };
 
-llvm::Value * While_block::emit_target(llvm::Function * father){
+llvm::Value * While_block::emit_target(llvm::Function * father, llvm::Value * lvalue){
 	return NULL;
 };
 
