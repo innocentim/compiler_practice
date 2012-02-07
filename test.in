@@ -1,8 +1,7 @@
 int work(int a){
-	int b;
-	a = 3;
-	b = a;
 };
 
 int main(){
+	int a;
+	a = 3 + work(1);
 };

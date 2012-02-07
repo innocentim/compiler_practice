@@ -70,8 +70,14 @@ void Func_def::emit_target(){
 };
 
 llvm::Value * Factor_const_num::emit_target(llvm::Function * father, llvm::Value * lvalue){
-	llvm::BasicBlock * block = &father->getBasicBlockList().back();
-	return new llvm::StoreInst(llvm::ConstantInt::get(type_map[type_int], value), lvalue, false, block);
+	if (lvalue != NULL){
+		printf("!\n");
+		llvm::BasicBlock * block = &father->getBasicBlockList().back();
+		llvm::StoreInst * temp = new llvm::StoreInst(llvm::ConstantInt::get(type_map[type_int], value), lvalue, false, block);
+		return temp;
+	} else {
+		return llvm::ConstantInt::get(type_map[type_int], value);
+	}
 };
 
 llvm::Value * Factor_const_str::emit_target(llvm::Function * father, llvm::Value * lvalue){
@@ -84,10 +90,10 @@ llvm::Value * Factor_var::emit_target(llvm::Function * father, llvm::Value * lva
 };
 
 llvm::Value * Factor_call::emit_target(llvm::Function * father, llvm::Value * lvalue){
-	llvm::BasicBlock * block = &father->getBasicBlockList().back();
 	std::vector<llvm::Value*> llvm_args;
 	if (_bind->ret_var->type != type_void){
 		if (lvalue == NULL){
+			llvm::BasicBlock * block = &father->getBasicBlockList().back();
 			lvalue = new llvm::AllocaInst(type_map[_bind->ret_var->type], "", block);
 		}
 		llvm_args.push_back(lvalue);
@@ -96,8 +102,9 @@ llvm::Value * Factor_call::emit_target(llvm::Function * father, llvm::Value * lv
 		llvm::Value * temp = args[i]->emit_target(father, NULL);
 		llvm_args.push_back(temp);
 	}
+	llvm::BasicBlock * block = &father->getBasicBlockList().back();
 	llvm::CallInst::Create(_bind->_llvm_bind, llvm_args, "", block);
-	return new llvm::LoadInst(llvm_args.front(), "", block);
+	return lvalue;
 };
 
 llvm::Value * Binary_op::emit_target(llvm::Function * father, llvm::Value * lvalue){
@@ -105,7 +112,12 @@ llvm::Value * Binary_op::emit_target(llvm::Function * father, llvm::Value * lval
 		llvm::Value * r = right->emit_target(father, NULL);
 		llvm::Value * l = left->emit_target(father, NULL);
 		llvm::BasicBlock * block = &father->getBasicBlockList().back();
-		return llvm::BinaryOperator::Create(op_map[op], l, r, "", block);
+		llvm::BinaryOperator * res = llvm::BinaryOperator::Create(op_map[op], l, r, "", block);
+		if (lvalue != NULL){
+			return new llvm::StoreInst(res, lvalue, false, block);
+		} else {
+			return NULL;
+		}
 	} else {
 		Definition * temp = left->get_bind();
 		if (temp == NULL){

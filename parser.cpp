@@ -116,6 +116,7 @@ Expr * parse_expr(){
 		return NULL;
 	}
 	if (operator_map[lookahead(0).tok] == NULL){
+		left->left->get_type();
 		return left->left;
 	}
 	left->op = lookahead(0).tok;
