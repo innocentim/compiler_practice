@@ -1,6 +1,6 @@
 int main(){
 	int a;
 	int b;
-	main + 3;
-	'3' + b;
+	main = 3 + a + b;
+	a = main;
 };

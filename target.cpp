@@ -1,4 +1,5 @@
 #include "common.hpp"
+#include "misc.hpp"
 #include <llvm/DerivedTypes.h>
 #include <llvm/Instructions.h>
 #include <llvm/LLVMContext.h>
@@ -24,6 +25,7 @@ llvm::Module * Top::emit_target(){
 };
 
 void Statements::emit_target(llvm::Function * father){
+	llvm::BasicBlock::Create(llvm::getGlobalContext(), "", father);
 	for (unsigned int i = 0, e = vars.size(); i < e; i++){
 		vars[i]->emit_target(father);
 	}
@@ -33,16 +35,16 @@ void Statements::emit_target(llvm::Function * father){
 	for (unsigned int i = 0, e = stmts.size(); i < e; i++){
 		stmts[i]->emit_target(father);
 	}
-	llvm::BasicBlock * block = (father->getBasicBlockList().size() == 0) ? llvm::BasicBlock::Create(llvm::getGlobalContext(), "", father) : &father->getBasicBlockList().back();
+	llvm::BasicBlock * block = &father->getBasicBlockList().back();
 	llvm::ReturnInst::Create(llvm::getGlobalContext(), NULL, block);
 };
 
 void Var_def::emit_target(llvm::Function * father){
 	if (father == NULL){
-		llvm_bind = new llvm::GlobalVariable(*module, type_map[type], false, llvm::GlobalValue::CommonLinkage, NULL, name);
+		_llvm_bind = new llvm::GlobalVariable(*module, type_map[type], false, llvm::GlobalValue::CommonLinkage, NULL, name);
 	} else {
-		llvm::BasicBlock * block = (father->getBasicBlockList().size() == 0) ? llvm::BasicBlock::Create(llvm::getGlobalContext(), "", father) : &father->getBasicBlockList().back();
-		llvm_bind = new llvm::AllocaInst(type_map[type], name, block);
+		llvm::BasicBlock * block = &father->getBasicBlockList().back();
+		_llvm_bind = new llvm::AllocaInst(type_map[type], name, block);
 	}
 };
 
@@ -55,15 +57,15 @@ void Func_def::emit_target(){
 		args_type.push_back(type_map[args[i]->type]);
 	}
 	llvm::FunctionType * ft = llvm::FunctionType::get(llvm::Type::getVoidTy(llvm::getGlobalContext()), args_type, false);
-	llvm_bind = llvm::Function::Create(ft, llvm::Function::ExternalLinkage , ret_var->name, module);
-	llvm::Function::ArgumentListType::iterator temp = llvm_bind->getArgumentList().begin();
+	_llvm_bind = llvm::Function::Create(ft, llvm::Function::ExternalLinkage , ret_var->name, module);
+	llvm::Function::ArgumentListType::iterator temp = _llvm_bind->getArgumentList().begin();
 	if (ret_var->type != type_void){
-		ret_var->llvm_bind = temp++;
+		ret_var->_llvm_bind = temp++;
 	}
 	for (unsigned int i = 0, e = args.size(); i < e; i++){
-		args[i]->llvm_bind = temp++;
+		args[i]->_llvm_bind = temp++;
 	}
-	stmts->emit_target(llvm_bind);
+	stmts->emit_target(_llvm_bind);
 };
 
 llvm::Value * Factor_const_num::emit_target(llvm::Function * father){
@@ -75,8 +77,8 @@ llvm::Value * Factor_const_str::emit_target(llvm::Function * father){
 };
 
 llvm::Value * Factor_var::emit_target(llvm::Function * father){
-	llvm::BasicBlock * block = (father->getBasicBlockList().size() == 0) ? llvm::BasicBlock::Create(llvm::getGlobalContext(), "", father) : &father->getBasicBlockList().back();
-	return new llvm::LoadInst(bind->llvm_bind, "", block);
+	llvm::BasicBlock * block = &father->getBasicBlockList().back();
+	return new llvm::LoadInst(_bind->_llvm_bind, "", block);
 };
 
 llvm::Value * Factor_call::emit_target(llvm::Function * father){
@@ -84,11 +86,18 @@ llvm::Value * Factor_call::emit_target(llvm::Function * father){
 };
 
 llvm::Value * Binary_op::emit_target(llvm::Function * father){
-	llvm::BasicBlock * block = (father->getBasicBlockList().size() == 0) ? llvm::BasicBlock::Create(llvm::getGlobalContext(), "", father) : &father->getBasicBlockList().back();
-	llvm::Value * l = left->emit_target(father);
+	llvm::BasicBlock * block = &father->getBasicBlockList().back();
 	llvm::Value * r = right->emit_target(father);
-	llvm::Value * ret = llvm::BinaryOperator::Create(op_map[op], l, r, "", block);
-	return ret;
+	if (op != tok_punc_equ){
+		llvm::Value * l = left->emit_target(father);
+		return llvm::BinaryOperator::Create(op_map[op], l, r, "", block);
+	} else {
+		Definition * temp = left->get_bind();
+		if (temp == NULL){
+			error("invalid lvalue");
+		}
+		return new llvm::StoreInst(r, temp->get_llvm_bind(), block);
+	}
 };
 
 llvm::Value * If_block::emit_target(llvm::Function * father){
@@ -112,5 +121,4 @@ void init_target(){
 	op_map[tok_punc_minus] = llvm::BinaryOperator::Sub;
 	op_map[tok_punc_star] = llvm::BinaryOperator::Mul;
 	op_map[tok_punc_slash] = llvm::BinaryOperator::UDiv;
-	//op_map[tok_punc_equ] = llvm::BinaryOperator::
 };

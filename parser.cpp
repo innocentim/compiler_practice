@@ -292,7 +292,7 @@ Type Factor_var::get_type(){
 			cur = cur->father;
 			continue;
 		}
-		bind = cur->var_tbl[name];
+		_bind = cur->var_tbl[name];
 		return cur->var_tbl[name]->get_type();
 	}
 	error("var undefined");
@@ -316,7 +316,7 @@ Type Factor_call::get_type(){
 				error("type check error");
 			}
 		}
-		bind = cur->func_tbl[name];
+		_bind = cur->func_tbl[name];
 		return cur->func_tbl[name]->get_type();
 	}
 	error("function can't bind");

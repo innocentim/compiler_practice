@@ -62,9 +62,11 @@ struct Statement{
 	virtual llvm::Value * emit_target(llvm::Function*) = 0;
 };
 
+struct Definition;
 struct Expr : public Statement{
 	virtual void emit_source() = 0;
 	virtual llvm::Value * emit_target(llvm::Function*) = 0;
+	virtual Definition * get_bind() = 0;
 	virtual Type get_type() = 0;
 };
 
@@ -89,30 +91,40 @@ struct Statements{
 	virtual void emit_target(llvm::Function*);
 };
 
-struct Var_def{
+struct Definition{
+	virtual llvm::Value * get_llvm_bind() = 0;
+};
+
+struct Var_def : Definition{
 	std::string type_str;
 	Type type;
 	std::string name;
-	llvm::Value * llvm_bind;
+	llvm::Value * _llvm_bind;
 
 	Var_def();
 	virtual void emit_source();
 	virtual void emit_target(llvm::Function*);
+	virtual llvm::Value * get_llvm_bind(){
+		return _llvm_bind;
+	};
 	virtual std::string& get_name(){
 		return name;
 	};
 	virtual Type get_type();
 };
 
-struct Func_def{
+struct Func_def : Definition{
 	Var_def * ret_var;
 	std::vector<Var_def*> args;
 	Statements * stmts;
-	llvm::Function * llvm_bind;
+	llvm::Function * _llvm_bind;
 
 	Func_def();
 	virtual void emit_source();
 	virtual void emit_target();
+	virtual llvm::Function * get_llvm_bind(){
+		return _llvm_bind;
+	};
 	virtual std::string& get_name(){
 		return ret_var->name;
 	};
@@ -125,6 +137,9 @@ struct Factor_const_num : public Expr{
 	Factor_const_num();
 	virtual void emit_source();
 	virtual llvm::Value* emit_target(llvm::Function*);
+	virtual Definition* get_bind(){
+		return NULL;
+	};
 	virtual Type get_type();
 };
 
@@ -134,27 +149,36 @@ struct Factor_const_str : public Expr{
 	Factor_const_str();
 	virtual void emit_source();
 	virtual llvm::Value* emit_target(llvm::Function*);
+	virtual Definition* get_bind(){
+		return NULL;
+	};
 	virtual Type get_type();
 };
 
 struct Factor_var : public Expr{
 	std::string name;
-	Var_def * bind;
+	Var_def * _bind;
 
 	Factor_var();
 	virtual void emit_source();
 	virtual llvm::Value* emit_target(llvm::Function*);
+	virtual Var_def * get_bind(){
+		return _bind;
+	};
 	virtual Type get_type();
 };
 
 struct Factor_call : public Expr{
 	std::string name;
 	std::vector<std::string> args;
-	Func_def * bind;
+	Func_def * _bind;
 
 	Factor_call();
 	virtual void emit_source();
 	virtual llvm::Value* emit_target(llvm::Function*);
+	virtual Func_def * get_bind(){
+		return _bind;
+	};
 	virtual Type get_type();
 };
 
@@ -166,6 +190,9 @@ struct Binary_op : public Expr{
 	Binary_op() : op(tok_invalid), left(NULL), right(NULL){};
 	virtual void emit_source();
 	virtual llvm::Value* emit_target(llvm::Function*);
+	virtual Definition* get_bind(){
+		return NULL;
+	};
 	virtual Type get_type();
 };
 
