@@ -96,6 +96,10 @@ void While_block::emit_source(){
 	printf("}");
 };
 
+void Return_inst::emit_source(){
+	printf("return");
+};
+
 void Func_def::emit_source(){
 	ret_var->emit_source();
 	printf("(");

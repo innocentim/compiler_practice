@@ -14,6 +14,7 @@ enum Token{
 	tok_kw_if,
 	tok_kw_while,
 	tok_kw_else,
+	tok_kw_return,
 	tok_const_num,
 	tok_const_str,
 	tok_punc_plus,
@@ -210,6 +211,12 @@ struct While_block : public Statement{
 	Statements * stmts;
 
 	While_block();
+	virtual void emit_source();
+	virtual llvm::Value * emit_target(llvm::Function*, llvm::Value*);
+};
+
+struct Return_inst : public Statement{
+	Return_inst();
 	virtual void emit_source();
 	virtual llvm::Value * emit_target(llvm::Function*, llvm::Value*);
 };

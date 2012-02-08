@@ -1,10 +1,8 @@
 #include "common.hpp"
 #include "misc.hpp"
-#include <llvm/DerivedTypes.h>
 #include <llvm/Instructions.h>
 #include <llvm/LLVMContext.h>
 #include <llvm/Module.h>
-#include <cstdio>
 
 static llvm::Type * type_map[type_invalid + 1] = {NULL};
 static Type type_ref_map[type_invalid + 1];
@@ -14,7 +12,6 @@ static llvm::Module * module;
 void init_target();
 llvm::Module * Top::emit_target(){
 	init_target();
-	module = new llvm::Module("compiler_practice", llvm::getGlobalContext());
 	for (unsigned int i = 0, e = vars.size(); i < e; i++){
 		vars[i]->emit_target(NULL);
 	}
@@ -70,14 +67,12 @@ void Func_def::emit_target(){
 };
 
 llvm::Value * Factor_const_num::emit_target(llvm::Function * father, llvm::Value * lvalue){
+	llvm::Value * v = llvm::ConstantInt::get(type_map[type_int], value);
 	if (lvalue != NULL){
-		printf("!\n");
 		llvm::BasicBlock * block = &father->getBasicBlockList().back();
-		llvm::StoreInst * temp = new llvm::StoreInst(llvm::ConstantInt::get(type_map[type_int], value), lvalue, false, block);
-		return temp;
-	} else {
-		return llvm::ConstantInt::get(type_map[type_int], value);
+		v = new llvm::StoreInst(v, lvalue, false, block);
 	}
+	return v;
 };
 
 llvm::Value * Factor_const_str::emit_target(llvm::Function * father, llvm::Value * lvalue){
@@ -86,7 +81,11 @@ llvm::Value * Factor_const_str::emit_target(llvm::Function * father, llvm::Value
 
 llvm::Value * Factor_var::emit_target(llvm::Function * father, llvm::Value * lvalue){
 	llvm::BasicBlock * block = &father->getBasicBlockList().back();
-	return new llvm::StoreInst(new llvm::LoadInst(_bind->_llvm_bind, "", block), lvalue, false, block);
+	llvm::Value * v = new llvm::LoadInst(_bind->_llvm_bind, "", block);
+	if (lvalue != NULL){
+		v = new llvm::StoreInst(v, lvalue, false, block);
+	}
+	return v;
 };
 
 llvm::Value * Factor_call::emit_target(llvm::Function * father, llvm::Value * lvalue){
@@ -104,7 +103,7 @@ llvm::Value * Factor_call::emit_target(llvm::Function * father, llvm::Value * lv
 	}
 	llvm::BasicBlock * block = &father->getBasicBlockList().back();
 	llvm::CallInst::Create(_bind->_llvm_bind, llvm_args, "", block);
-	return lvalue;
+	return new llvm::LoadInst(lvalue, "", block);
 };
 
 llvm::Value * Binary_op::emit_target(llvm::Function * father, llvm::Value * lvalue){
@@ -137,7 +136,16 @@ llvm::Value * While_block::emit_target(llvm::Function * father, llvm::Value * lv
 	return NULL;
 };
 
+llvm::Value * Return_inst::emit_target(llvm::Function * father, llvm::Value * lvalue){
+	llvm::BasicBlock * block = &father->getBasicBlockList().back();
+	llvm::Value * v = llvm::ReturnInst::Create(llvm::getGlobalContext(), NULL, block);
+	llvm::BasicBlock::Create(llvm::getGlobalContext(), "", father);
+	return v;
+};
+
 void init_target(){
+	module = new llvm::Module("compiler_practice", llvm::getGlobalContext());
+	module->setTargetTriple("x86_64-unknown-linux-gnu");
 	type_map[type_void] = llvm::Type::getVoidTy(llvm::getGlobalContext());
 	type_map[type_int] = llvm::Type::getInt32Ty(llvm::getGlobalContext());
 	type_map[type_str] = llvm::Type::getInt8PtrTy(llvm::getGlobalContext());

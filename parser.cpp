@@ -181,6 +181,10 @@ While_block::While_block(){
 	eat(tok_punc_rbrace);
 };
 
+Return_inst::Return_inst(){
+	eat(tok_kw_return);
+};
+
 Func_def::Func_def(){
 	Context * con_temp = context;
 	context_push();
@@ -253,6 +257,9 @@ Statements::Statements(){
 			break;
 		case tok_kw_while:
 			stmts.push_back(new While_block());
+			break;
+		case tok_kw_return:
+			stmts.push_back(new Return_inst());
 			break;
 		default:
 			goto _out;

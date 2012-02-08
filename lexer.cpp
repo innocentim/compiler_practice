@@ -111,6 +111,8 @@ void get_tokens(FILE * fin){
 				cur_token = tok_kw_if;
 			} else if (cur_token_str == "while"){
 				cur_token = tok_kw_while;
+			} else if (cur_token_str == "return"){
+				cur_token = tok_kw_return;
 			} else {
 				cur_token = tok_identifier;
 			}

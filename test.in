@@ -1,7 +1,5 @@
 int work(int a){
+	work = a + 1;
+	return
 };
 
-int main(){
-	int a;
-	a = 3 + work(1);
-};
