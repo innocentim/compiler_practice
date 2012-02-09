@@ -7,10 +7,10 @@ LINK_FLAGS = -L/usr/lib/llvm -lpthread -lffi -ldl -lm -lLLVMCore -lLLVMSupport
 all : $(TARGET)
 
 $(TARGET) : $(OBJS)
-	@$(CC) -o $@ $^ $(LINK_FLAGS)
+	$(CC) -o $@ $^ $(LINK_FLAGS)
 
 $(OBJS) :
-	@$(CC) -c -MMD -o $@ $(@:.o=.cpp) $(COMPILE_FLAGS)
+	$(CC) -c -MMD -o $@ $(@:.o=.cpp) $(COMPILE_FLAGS)
 
 clean :
 	rm -f $(TARGET) $(OBJS) $(OBJS:.o=.d)

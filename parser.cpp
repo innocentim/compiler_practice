@@ -39,16 +39,19 @@ Var_def::Var_def(){
 	if (type_map.count(lookahead(0).str) > 0){
 		type_str = lookahead(0).str;
 		type = type_map[lookahead(0).str];
+	} else {
+		error("unknown type");
+	}
+	if (type == type_void){
+		error("the type of var can't be void");
 	}
 	eat(tok_identifier);
 	name = lookahead(0).str;
 	eat(tok_identifier);
-	if (name != "void"){
-		if (context->var_tbl.count(get_name())){
-			error("duplicated var definition");
-		}
-		context->var_tbl.insert(std::pair<std::string, Var_def*>(get_name(), this));
+	if (context->var_tbl.count(get_name())){
+		error("duplicated var definition");
 	}
+	context->var_tbl.insert(std::pair<std::string, Var_def*>(get_name(), this));
 };
 
 Factor_const_num::Factor_const_num(){
@@ -214,6 +217,7 @@ Func_def::Func_def(){
 };
 
 Top::Top(){
+
 	context_push();
 	while (1){
 		switch (lookahead(0).tok){
@@ -228,8 +232,10 @@ Top::Top(){
 				error("definition expected!");
 			}
 			break;
-		default:
+		case tok_eof:
 			goto _out;
+		default:
+			error("identifier expected");
 		}
 	}
 _out:

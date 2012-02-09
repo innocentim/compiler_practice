@@ -1,3 +1,5 @@
+void a;
+
 int work(int a){
 	work = a + 1;
 	return
