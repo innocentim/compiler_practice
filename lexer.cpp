@@ -7,6 +7,7 @@
 
 struct dict_tree;
 static dict_tree * punc_map;
+const char * punc_dump[1024];
 
 struct dict_tree{
 	dict_tree * out[256];
@@ -57,19 +58,24 @@ int get_escaped_char(int end){
 	return now;
 };
 
+void punc_regi(const char * s, int token){
+	punc_map->set(s, token);
+	punc_dump[token] = s;
+};
+
 void init_punc(){
 	punc_map = new dict_tree();
-	punc_map->set("+", PLUS);
-	punc_map->set("-", MINUS);
-	punc_map->set("*", STAR);
-	punc_map->set("/", SLASH);
-	punc_map->set("=", EQU);
-	punc_map->set("{", LBRACE);
-	punc_map->set("}", RBRACE);
-	punc_map->set("(", LPAREN);
-	punc_map->set(")", RPAREN);
-	punc_map->set(",", COMMA);
-	punc_map->set("//", SLASHSLASH);
+	punc_regi("+", PLUS);
+	punc_regi("-", MINUS);
+	punc_regi("*", STAR);
+	punc_regi("/", SLASH);
+	punc_regi("=", EQU);
+	punc_regi("{", LBRACE);
+	punc_regi("}", RBRACE);
+	punc_regi("(", LPAREN);
+	punc_regi(")", RPAREN);
+	punc_regi(",", COMMA);
+	punc_regi("//", SLASHSLASH);
 };
 
 int yylex(){
@@ -147,6 +153,7 @@ int yylex(){
 		last = getchar();
 	}
 	if (now->data != SLASHSLASH){
+		yylval.token = now->data;
 		return now->data;
 	}
 	while (last != '\n' && last != '\r'){

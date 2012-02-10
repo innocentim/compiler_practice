@@ -1,5 +1,9 @@
 #include "AST.hpp"
 
+llvm::Value * Stmts::codeGen(){
+	return NULL;
+};
+
 llvm::Value * Identifier::codeGen(){
 	return NULL;
 };
