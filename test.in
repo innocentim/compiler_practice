@@ -1,6 +1,9 @@
-void a;
+int a;
 
 int work(int a){
+	void test(int b){
+		return;
+	}
 	work = a * b + d*c;
 };
 

@@ -1,6 +1,5 @@
 #include "AST.hpp"
 #include <cstdio>
-#include <cassert>
 
 static int iden = 0;
 extern char * punc_dump[];
@@ -91,10 +90,15 @@ void FuncDef::emitSource() const {
 	iden++;
 	body.emitSource();
 	iden--;
+	print_iden(iden);
 	printf("}");
 };
 
 void ExprStmt::emitSource() const {
 	expr.emitSource();
+};
+
+void Return::emitSource() const {
+	printf("return");
 };
 

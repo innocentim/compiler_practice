@@ -1,9 +1,10 @@
 #include "AST.hpp"
 #include "parser.hpp"
 #include <cstdio>
+#include <cstdlib>
 
 #define STRING_END -2
-#define error(str) fprintf(stderr, "error: ");fprintf(stderr, str);fprintf(stderr, "\n")
+#define error(str) fprintf(stderr, "error: ");fprintf(stderr, str);fprintf(stderr, "\n");exit(1)
 
 struct dict_tree;
 static dict_tree * punc_map;
@@ -63,7 +64,7 @@ void punc_regi(const char * s, int token){
 	punc_dump[token] = s;
 };
 
-void init_punc(){
+void initPunc(){
 	punc_map = new dict_tree();
 	punc_regi("+", PLUS);
 	punc_regi("-", MINUS);

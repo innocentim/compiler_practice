@@ -32,7 +32,7 @@
 %type <varlist> func_def_args
 %type <exprlist> call_args
 %type <stmts> top defs stmts
-%type <stmt> stmt def func_def
+%type <stmt> stmt def func_def return
 %type <vardef> var_def
 
 %left PLUS MINUS
@@ -72,7 +72,10 @@ stmts : stmt { $$ = new Stmts(); $$->stmts.push_back($1); }
 
 stmt : def
 	 | expr { $$ = new ExprStmt(*$1); }
+	 | return { $$ = $1; }
 	 ;
+
+return : RETURN { $$ = new Return(); }
 
 expr : ident EQU expr { $$ = new Assignment(*$1, *$3); }
 	 | ident LPAREN call_args RPAREN { $$ = new FactorCall(*$1, *$3); }
