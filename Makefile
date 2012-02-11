@@ -18,7 +18,7 @@ $(OBJS) : %.o : %.cpp
 $(YACC_OBJ) : %.cpp : %.y
 	$(YACC) $(YACC_FLAGS) -o $@ $^
 
-lexer.o : parser.cpp
+code_gen.o lexer.o : parser.cpp
 
 clean :
 	rm -f $(TARGET) $(OBJS) $(OBJS:.o=.d) $(YACC_OBJ:.cpp=.o) $(YACC_OBJ) $(YACC_OBJ:.cpp=.hpp)

@@ -35,6 +35,7 @@
 %type <stmt> stmt def func_def return
 %type <vardef> var_def
 
+%right EQU
 %left PLUS MINUS
 %left STAR SLASH
 
@@ -66,7 +67,8 @@ func_def_args : { $$ = new VarList(); }
 			  | func_def_args COMMA var_def { $1->push_back($3); }
 			  ;
 
-stmts : stmt { $$ = new Stmts(); $$->stmts.push_back($1); }
+stmts : { $$ = new Stmts(); }
+	  | stmt { $$ = new Stmts(); $$->stmts.push_back($1); }
 	  | stmts stmt { $1->stmts.push_back($2); }
 	  ;
 

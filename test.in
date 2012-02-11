@@ -1,9 +1,14 @@
-int a;
 
-int work(int a){
-	void test(int b){
+int a;
+int b;
+int c;
+int d
+int now
+
+void work(){
+	int test(int b){
 		return;
 	}
-	work = a * b + d*c;
+	now = a * test(b) + d*c;
 };
 
