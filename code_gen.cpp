@@ -15,14 +15,14 @@
 using namespace llvm;
 
 Module * module = new Module("compiler_practice", getGlobalContext());
-static Instruction::BinaryOps op_map[SLASHSLASH + 1];
+static Instruction::BinaryOps op_map[SLASHSLASH];
 
 static Type * getType(const Identifier & type, bool void_permit){
-	if (type.str == "int"){
+	if (type == "int"){
 		return Type::getInt64Ty(getGlobalContext());
-	} else if (type.str == "string"){
+	} else if (type == "string"){
 		return Type::getInt8PtrTy(getGlobalContext());
-	} else if (type.str == "void"){
+	} else if (type == "void"){
  		if (void_permit){
 			return Type::getVoidTy(getGlobalContext());
 		}
@@ -40,13 +40,14 @@ Value * Stmts::codeGen(CGContext * context){
 	return NULL;
 };
 
-Value * Identifier::codeGen(CGContext * context){
+Value * FactorVar::codeGen(CGContext * context){
 	CGContext * cur = context;
 	while (cur != NULL){
 		if (cur->table.count(str) == 0){
 			cur = cur->father;
 			continue;
 		}
+		type = cur->defTable[str]->type;
 		return new LoadInst(cur->table[str], "", false, &context->func->getBasicBlockList().back());
 	}
 	error("variable undefined");
@@ -54,17 +55,26 @@ Value * Identifier::codeGen(CGContext * context){
 };
 
 Value * FactorNum::codeGen(CGContext * context){
+	type = "int";
 	return ConstantInt::get(Type::getInt64Ty(getGlobalContext()), value, true);
 };
 
 Value * FactorStr::codeGen(CGContext * context){
-	return NULL;
+	type = "string";
+	Type * type = ArrayType::get(Type::getInt8Ty(getGlobalContext()), str.size() + 1);
+	Constant * temp = ConstantArray::get(getGlobalContext(), str);
+	Constant * s = new GlobalVariable(*module, type, true, GlobalValue::PrivateLinkage, temp, ".str");
+	std::vector<Value*> idxList;
+	idxList.push_back(ConstantInt::get(Type::getInt64Ty(getGlobalContext()), 0, true));
+	idxList.push_back(ConstantInt::get(Type::getInt64Ty(getGlobalContext()), 0, true));
+	Value * ret = ConstantExpr::getGetElementPtr(s, idxList, true);
+	return ret;
 };
 
 Value * FactorCall::codeGen(CGContext * context){
 	CGContext * cur = context;
 	while (cur != NULL){
-		if (cur->table.count(name.str) == 0){
+		if (cur->table.count(name) == 0){
 			cur = cur->father;
 			continue;
 		}
@@ -73,7 +83,8 @@ Value * FactorCall::codeGen(CGContext * context){
 		for (it = args.begin(), e = args.end(); it != e; ++it){
 			v_args.push_back((**it).codeGen(context));
 		}
-		return CallInst::Create(cur->table[name.str], v_args, "", &context->func->getBasicBlockList().back());
+		type = cur->defTable[name]->type;
+		return CallInst::Create(cur->table[name], v_args, "", &context->func->getBasicBlockList().back());
 	}
 	error("variable undefined");
 	return NULL;
@@ -82,54 +93,65 @@ Value * FactorCall::codeGen(CGContext * context){
 Value * BinaryOp::codeGen(CGContext * context){
 	Value * l = left.codeGen(context);
 	Value * r = right.codeGen(context);
-	if (l->getType() == Type::getVoidTy(getGlobalContext()) || r->getType() == Type::getVoidTy(getGlobalContext())){
-		error("a procedure can't be rvalue");
-	}
-	if (l->getType() != r->getType()){
+	if (left.type != right.type){
 		error("type not match");
 	}
+	type = left.type;
 	return BinaryOperator::Create(op_map[op], l, r, "", &context->func->getBasicBlockList().back());
 };
 
 Value * Assignment::codeGen(CGContext * context){
 	CGContext * cur = context;
 	while (cur != NULL){
-		if (cur->table.count(lvalue.str) == 0){
+		if (cur->table.count(lvalue) == 0){
 			cur = cur->father;
 			continue;
 		}
-		Value * l = cur->table[lvalue.str];
+		Value * l = cur->table[lvalue];
 		Value * r = rvalue.codeGen(context);
-		if (l->getType() != r->getType()->getPointerTo()){
+		if (cur->defTable[lvalue]->type != rvalue.type){
 			error("type not match");
 		}
-		return new StoreInst(r, l, false, &context->func->getBasicBlockList().back());
+		new StoreInst(r, l, false, &context->func->getBasicBlockList().back());
+		type = rvalue.type;
+		return r;
 	}
 	error("variable undefined");
 	return NULL;
 };
 
 Value * VarDef::codeGen(CGContext * context){
-	if (context->table.count(name.str) != 0){
+	if (context->table.count(name) != 0){
 		error("duplicated definition");
 	}
 	Value * ret;
+	context->defTable[name] = this;
 	if (context->father != NULL){
-		ret = new AllocaInst(getType(type, false), name.str, &context->func->getBasicBlockList().back());
+		ret = new AllocaInst(getType(type, false), name, &context->func->getBasicBlockList().back());
+		context->table[name] = ret;
+		if (assign != NULL){
+			Assignment temp(name, *assign);
+			temp.codeGen(context);
+		}
 	} else {
-	Constant * temp = ConstantInt::get(Type::getInt64Ty(getGlobalContext()), 0, true);
-		ret = new GlobalVariable(*module, getType(type, false), false, GlobalValue::CommonLinkage, temp, name.str);
-	}
-	context->table[name.str] = ret;
-	if (assign != NULL){
-		Assignment temp(name, *assign);
-		temp.codeGen(context);
+		Constant * temp = ConstantInt::get(getType(type, false), 0, true);
+		GlobalVariable * ret_temp = new GlobalVariable(*module, getType(type, false), false, GlobalValue::ExternalLinkage, temp, name);
+		context->table[name] = ret_temp;
+		if (assign != NULL){
+			Value * rvalue = assign->codeGen(context);
+			if (Constant::classof(rvalue)){
+				ret_temp->setInitializer((Constant*)rvalue);
+			} else {
+				error("initializer element is not a compile-time constant");
+			}
+		}
+		ret = ret_temp;
 	}
 	return ret;
 };
 
 Value * FuncDef::codeGen(CGContext * context){
-	if (context->table.count(name.str) != 0){
+	if (context->table.count(name) != 0){
 		error("duplicated definition");
 	}
 	std::vector<Type*> argTypes;
@@ -138,8 +160,9 @@ Value * FuncDef::codeGen(CGContext * context){
 		argTypes.push_back(getType((**it).type, false));
 	}
 	FunctionType * ft = FunctionType::get(getType(type, true), argTypes, false);
-	Function * f = Function::Create(ft, GlobalValue::ExternalLinkage, name.str, module);
-	context->table[name.str] = f;
+	Function * f = Function::Create(ft, GlobalValue::ExternalLinkage, name, module);
+	context->defTable[name] = this;
+	context->table[name] = f;
 	CGContext * cur = new CGContext(context, f);
 	BasicBlock::Create(getGlobalContext(), "", f, NULL);
 	for (it = args.begin(), e = args.end(); it != e; ++it){

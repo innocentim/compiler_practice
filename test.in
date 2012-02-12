@@ -1,14 +1,5 @@
-
-int a;
-int b;
-int c;
-int d
-int now
-
+string s1 = "world"
 void work(){
-	int test(int b){
-		return;
-	}
-	now = a * test(b) + d*c;
+	string s = "hello"
 };
 

@@ -19,7 +19,7 @@ void Stmts::emitSource() const {
 	}
 };
 
-void Identifier::emitSource() const {
+void FactorVar::emitSource() const {
 	printf("%s", str.c_str());
 };
 
@@ -32,7 +32,7 @@ void FactorStr::emitSource() const {
 };
 
 void FactorCall::emitSource() const {
-	name.emitSource();
+	printf("%s", name.c_str());
 	printf("(");
 	ExprList::const_iterator it, e;
 	if (args.size() > 0) {
@@ -56,15 +56,17 @@ void BinaryOp::emitSource() const {
 };
 
 void Assignment::emitSource() const {
-	lvalue.emitSource();
+	printf("(");
+	printf("%s", lvalue.c_str());
 	printf(" = ");
 	rvalue.emitSource();
+	printf(")");
 };
 
 void VarDef::emitSource() const {
-	type.emitSource();
+	printf("%s", type.c_str());
 	printf(" ");
-	name.emitSource();
+	printf("%s", name.c_str());
 	if (assign != NULL){
 		printf(" = ");
 		assign->emitSource();
@@ -72,9 +74,9 @@ void VarDef::emitSource() const {
 };
 
 void FuncDef::emitSource() const {
-	type.emitSource();
+	printf("%s", type.c_str());
 	printf(" ");
-	name.emitSource();
+	printf("%s", name.c_str());
 	printf("(");
 	VarList::const_iterator it, e;
 	if (args.size() > 0){

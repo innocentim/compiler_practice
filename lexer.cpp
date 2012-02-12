@@ -103,33 +103,33 @@ int yylex(){
 		return IDENTIFIER;
 	}else if (isdigit(last) || last == '\''){ // number: ([0-9]+)|('[^']')
 		std::string & str = *(yylval.str = new std::string());
-		if (isdigit(last)){
+//		if (isdigit(last)){
 			str = last;
 			while (isdigit(last = getchar())){
 				str += last;
 			}
-		}else{
-			last = get_escaped_char('\'');
-			if (last == STRING_END){
-				error("empty character constant");
-			}
-			int last_temp;
-			last_temp = last;
-			last = get_escaped_char('\'');
-			if (last != STRING_END){
-				do{
-					last_temp = last;
-					last = get_escaped_char('\'');
-					if (last == EOF){
-						error("missing terminating \' character");
-					}
-				}while (last != STRING_END);
-			}
-			char temp[4];
-			sprintf(temp, "%d", last_temp);
-			str = std::string(temp);
-			last = getchar();
-		}
+//		}else{
+//			last = get_escaped_char('\'');
+//			if (last == STRING_END){
+//				error("empty character constant");
+//			}
+//			int last_temp;
+//			last_temp = last;
+//			last = get_escaped_char('\'');
+//			if (last != STRING_END){
+//				do{
+//					last_temp = last;
+//					last = get_escaped_char('\'');
+//					if (last == EOF){
+//						error("missing terminating \' character");
+//					}
+//				}while (last != STRING_END);
+//			}
+//			char temp[4];
+//			sprintf(temp, "%d", last_temp);
+//			str = std::string(temp);
+//			last = getchar();
+//		}
 		return NUM;
 	}else if (last == '\"'){ // string: "[^"]*"
 		std::string & str = *(yylval.str = new std::string());

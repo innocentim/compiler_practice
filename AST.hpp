@@ -7,12 +7,15 @@
 
 struct VarDef;
 struct Stmt;
+struct Definition;
 struct Expr;
 struct CGContext;
 
 typedef std::vector<VarDef*> VarList;
 typedef std::vector<Stmt*> StmtList;
+typedef std::vector<Definition*> DefList;
 typedef std::vector<Expr*> ExprList;
+typedef std::string Identifier;
 
 struct Stmt {
 	virtual llvm::Value * codeGen(CGContext*) = 0;
@@ -20,6 +23,7 @@ struct Stmt {
 };
 
 struct Expr{
+	Identifier type;
 	virtual llvm::Value * codeGen(CGContext*) = 0;
 	virtual void emitSource() const = 0;
 };
@@ -31,9 +35,9 @@ struct Stmts {
 	virtual void emitSource() const ;
 };
 
-struct Identifier : public Expr {
-	std::string str;
-	Identifier(std::string & str) : str(str) {};
+struct FactorVar : public Expr {
+	Identifier str;
+	FactorVar(Identifier & str) : str(str) {};
 	virtual llvm::Value * codeGen(CGContext*);
 	virtual void emitSource() const ;
 };
@@ -77,22 +81,26 @@ struct Assignment : public Expr {
 	virtual void emitSource() const ;
 };
 
-struct VarDef : public Stmt {
+struct Definition : public Stmt {
 	const Identifier & type;
 	const Identifier & name;
+	Definition(const Identifier & type, const Identifier & name) : type(type), name(name) {};
+	virtual llvm::Value * codeGen(CGContext*) = 0;
+	virtual void emitSource() const = 0;
+};
+
+struct VarDef : public Definition {
 	Expr * assign;
-	VarDef(const Identifier & type, const Identifier & name) : type(type), name(name), assign(NULL) {};
-	VarDef(const Identifier & type, const Identifier & name, Expr * assign) : type(type), name(name), assign(assign) {};
+	VarDef(const Identifier & type, const Identifier & name) : Definition(type, name), assign(NULL) {};
+	VarDef(const Identifier & type, const Identifier & name, Expr * assign) : Definition(type, name), assign(assign) {};
 	virtual llvm::Value * codeGen(CGContext*);
 	virtual void emitSource() const ;
 };
 
-struct FuncDef : public Stmt {
-	const Identifier & type;
-	const Identifier & name;
+struct FuncDef : public Definition {
 	VarList & args;
 	Stmts & body;
-	FuncDef(const Identifier & type, const Identifier &name, VarList & args, Stmts & body) : type(type), name(name), args(args), body(body) {};
+	FuncDef(const Identifier & type, const Identifier &name, VarList & args, Stmts & body) : Definition(type, name), args(args), body(body) {};
 	virtual llvm::Value * codeGen(CGContext*);
 	virtual void emitSource() const ;
 };
