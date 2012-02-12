@@ -101,6 +101,7 @@ void ExprStmt::emitSource() const {
 };
 
 void Return::emitSource() const {
-	printf("return");
+	printf("return ");
+	ret->emitSource();
 };
 

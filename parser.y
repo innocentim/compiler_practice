@@ -79,7 +79,7 @@ stmt : expr { $$ = new ExprStmt(*$1); }
 	 | return { $$ = $1; }
 	 ;
 
-return : RETURN { $$ = new Return(); }
+return : RETURN expr { $$ = new Return($2); }
 
 expr : ident EQU expr { $$ = new Assignment(*$1, *$3); }
 	 | ident LPAREN call_args RPAREN { $$ = new FactorCall(*$1, *$3); }

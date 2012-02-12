@@ -20,7 +20,7 @@ int main(int args, char *argv[]){
 	initCodeGen();
 //	yydebug = 1;
 	yyparse();
-	top->emitSource();
+//	top->emitSource();
 	top->codeGen(new CGContext(NULL, NULL));
 	codeDump();
 	return 0;

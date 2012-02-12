@@ -165,11 +165,12 @@ Value * FuncDef::codeGen(CGContext * context){
 	context->table[name] = f;
 	CGContext * cur = new CGContext(context, f);
 	BasicBlock::Create(getGlobalContext(), "", f, NULL);
-	for (it = args.begin(), e = args.end(); it != e; ++it){
-		(**it).codeGen(cur);
+	Function::ArgumentListType::iterator ait;
+	for (it = args.begin(), ait = f->getArgumentList().begin(), e = args.end(); it != e; ++it, ++ait){
+		new StoreInst(ait, (**it).codeGen(cur), false, &f->getBasicBlockList().back());
 	}
 	body.codeGen(cur);
-	ReturnInst::Create(getGlobalContext(), &f->getBasicBlockList().back());
+	ReturnInst::Create(getGlobalContext(), Constant::getNullValue(f->getReturnType()),&f->getBasicBlockList().back());
 	return NULL;
 };
 
@@ -178,11 +179,11 @@ Value * ExprStmt::codeGen(CGContext * context){
 };
 
 Value * Return::codeGen(CGContext * context){
-	return ReturnInst::Create(getGlobalContext(), &context->func->getBasicBlockList().back());
+	return ReturnInst::Create(getGlobalContext(), ret->codeGen(context), &context->func->getBasicBlockList().back());
 };
 
 void initCodeGen(){
-	module->setTargetTriple("x86-unknown-linux-gnu");
+	module->setTargetTriple("x86_64-unknown-linux-gnu");
 	op_map[PLUS] = Instruction::Add;
 	op_map[MINUS] = Instruction::Sub;
 	op_map[STAR] = Instruction::Mul;

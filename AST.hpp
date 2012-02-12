@@ -113,6 +113,8 @@ struct ExprStmt : public Stmt {
 };
 
 struct Return : public Stmt {
+	Expr * ret;
+	Return(Expr * ret) : ret(ret) {};
 	virtual llvm::Value * codeGen(CGContext*);
 	virtual void emitSource() const ;
 };

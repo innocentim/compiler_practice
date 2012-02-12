@@ -1,5 +1,9 @@
-string s1 = "world"
-void work(){
-	string s = "hello"
-};
-
+int delta
+string h = "hello, world\n"
+int add(int a){
+	a = a + delta
+	return a
+}
+void init(int _delta) {
+	delta = _delta
+}
