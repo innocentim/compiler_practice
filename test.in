@@ -1,5 +1,4 @@
 int delta
-string h = "hello, world\n"
 int add(int a){
 	a = a + delta
 	return a
