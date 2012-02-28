@@ -1,11 +1,11 @@
 TARGET = compiler_practice
 OBJS = lexer.o main.o parser.o code_gen.o emit_source.o
 YACC_OBJ = parser.cpp
-CC = clang++
+CC = g++
 YACC = yacc
 YACC_FLAGS = -d -t --locations -k
-COMPILE_FLAGS = -Wall -ggdb -Qunused-arguments -DNDEBUG -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
-LINK_FLAGS = -L/usr/lib/llvm -lpthread -lffi -ldl -lm -lLLVMCore -lLLVMSupport
+COMPILE_FLAGS = -Wall -ggdb `llvm-config --cppflags`
+LINK_FLAGS = `llvm-config --ldflags --libs core`
 
 all : $(TARGET)
 
