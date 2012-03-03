@@ -1,8 +1,8 @@
 #ifndef __AST_H__
 #define __AST_H__
 
+#include "list.hpp"
 #include <string>
-#include <vector>
 #include <llvm/Value.h>
 
 struct VarDef;
@@ -11,10 +11,10 @@ struct Definition;
 struct Expr;
 struct CGContext;
 
-typedef std::vector<VarDef*> VarList;
-typedef std::vector<Stmt*> StmtList;
-typedef std::vector<Definition*> DefList;
-typedef std::vector<Expr*> ExprList;
+typedef std::list<VarDef*> VarList;
+typedef std::list<Stmt*> StmtList;
+typedef std::list<Definition*> DefList;
+typedef std::list<Expr*> ExprList;
 typedef std::string Identifier;
 
 struct Stmt {
@@ -29,7 +29,7 @@ struct Expr{
 };
 
 struct Stmts {
-	std::vector<Stmt*> stmts;
+	std::list<Stmt*> stmts;
 	Stmts() {};
 	virtual llvm::Value * codeGen(CGContext*);
 	virtual void emitSource() const ;
