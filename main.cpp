@@ -7,7 +7,7 @@
 extern void initPunc();
 extern void codeDump();
 extern void initCodeGen();
-extern void yyparse();
+extern int yyparse();
 extern int yylex();
 extern int yydebug;
 Stmts * top;

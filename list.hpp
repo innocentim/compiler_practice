@@ -2,6 +2,7 @@
 #define __LIST_HPP__
 
 namespace std {
+
 template<class T>
 class list {
     class _node {
@@ -78,5 +79,6 @@ public:
     iterator end() { return iterator(head); };
     const_iterator end() const { return const_iterator(head); };
 };
+
 };
 #endif

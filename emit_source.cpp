@@ -2,7 +2,7 @@
 #include <cstdio>
 
 static int iden = 0;
-extern char * punc_dump[];
+extern const char * punc_dump[];
 
 void print_iden(int iden){
 	while (iden--){
