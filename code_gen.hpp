@@ -6,7 +6,8 @@
 #include <string>
 #include <map>
 
-struct CGContext{
+class CGContext{
+public:
     CGContext * father;
     llvm::Function * func;
     std::map<std::string, llvm::Value*> table;

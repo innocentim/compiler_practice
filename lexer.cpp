@@ -6,11 +6,12 @@
 #define STRING_END -2
 #define error(str) fprintf(stderr, "error: ");fprintf(stderr, str);fprintf(stderr, "\n");exit(1)
 
-struct dict_tree;
+class dict_tree;
 static dict_tree * punc_map;
 const char * punc_dump[1024];
 
-struct dict_tree{
+class dict_tree{
+public:
 	dict_tree * out[256];
 	int data;
 

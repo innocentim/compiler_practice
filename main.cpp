@@ -13,6 +13,7 @@ extern int yydebug;
 Stmts * top;
 
 int main(int args, char *argv[]){
+    list<int*> l;
 	if (args < 2 || !(freopen(argv[1], "r", stdin))){
 		exit(1);
 	}

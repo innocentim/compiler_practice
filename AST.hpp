@@ -5,58 +5,65 @@
 #include <string>
 #include <llvm/Value.h>
 
-struct VarDef;
-struct Stmt;
-struct Definition;
-struct Expr;
-struct CGContext;
+class VarDef;
+class Stmt;
+class Definition;
+class Expr;
+class CGContext;
 
-typedef std::list<VarDef*> VarList;
-typedef std::list<Stmt*> StmtList;
-typedef std::list<Definition*> DefList;
-typedef std::list<Expr*> ExprList;
+typedef list<VarDef*> VarList;
+typedef list<Stmt*> StmtList;
+typedef list<Definition*> DefList;
+typedef list<Expr*> ExprList;
 typedef std::string Identifier;
 
-struct Stmt {
+class Stmt {
+public:
 	virtual llvm::Value * codeGen(CGContext*) = 0;
 	virtual void emitSource() const = 0;
 };
 
-struct Expr{
+class Expr{
+public:
 	Identifier type;
 	virtual llvm::Value * codeGen(CGContext*) = 0;
 	virtual void emitSource() const = 0;
 };
 
-struct Stmts {
-	std::list<Stmt*> stmts;
+class Stmts {
+public:
+	list<Stmt*> stmts;
 	Stmts() {};
 	virtual llvm::Value * codeGen(CGContext*);
 	virtual void emitSource() const ;
 };
 
-struct FactorVar : public Expr {
+class FactorVar : public Expr {
+public:
 	Identifier str;
 	FactorVar(Identifier & str) : str(str) {};
 	virtual llvm::Value * codeGen(CGContext*);
 	virtual void emitSource() const ;
 };
 
-struct FactorNum : public Expr {
+class FactorNum : public Expr {
+public:
 	long long value;
 	FactorNum(long long value) : value(value) {};
 	virtual llvm::Value * codeGen(CGContext*);
 	virtual void emitSource() const ;
 };
 
-struct FactorStr : public Expr {
+class FactorStr : public Expr {
+public:
 	std::string & str;
 	FactorStr(std::string & str) : str(str) {};
 	virtual llvm::Value * codeGen(CGContext*);
 	virtual void emitSource() const ;
 };
 
-struct FactorCall : public Expr {
+class FactorCall : public Expr {
+public:
 	const Identifier & name;
 	ExprList & args;
 	FactorCall(const Identifier & name, ExprList & args) : name(name), args(args) {};
@@ -64,7 +71,8 @@ struct FactorCall : public Expr {
 	virtual void emitSource() const ;
 };
 
-struct BinaryOp : public Expr {
+class BinaryOp : public Expr {
+public:
 	int op;
 	Expr & left;
 	Expr & right;
@@ -73,7 +81,8 @@ struct BinaryOp : public Expr {
 	virtual void emitSource() const ;
 };
 
-struct Assignment : public Expr {
+class Assignment : public Expr {
+public:
 	const Identifier & lvalue;
 	Expr & rvalue;
 	Assignment(const Identifier & lvalue, Expr & rvalue) : lvalue(lvalue), rvalue(rvalue) {};
@@ -81,7 +90,8 @@ struct Assignment : public Expr {
 	virtual void emitSource() const ;
 };
 
-struct Definition : public Stmt {
+class Definition : public Stmt {
+public:
 	const Identifier & type;
 	const Identifier & name;
 	Definition(const Identifier & type, const Identifier & name) : type(type), name(name) {};
@@ -89,7 +99,8 @@ struct Definition : public Stmt {
 	virtual void emitSource() const = 0;
 };
 
-struct VarDef : public Definition {
+class VarDef : public Definition {
+public:
 	Expr * assign;
 	VarDef(const Identifier & type, const Identifier & name) : Definition(type, name), assign(NULL) {};
 	VarDef(const Identifier & type, const Identifier & name, Expr * assign) : Definition(type, name), assign(assign) {};
@@ -97,7 +108,8 @@ struct VarDef : public Definition {
 	virtual void emitSource() const ;
 };
 
-struct FuncDef : public Definition {
+class FuncDef : public Definition {
+public:
 	VarList & args;
 	Stmts & body;
 	FuncDef(const Identifier & type, const Identifier &name, VarList & args, Stmts & body) : Definition(type, name), args(args), body(body) {};
@@ -105,14 +117,16 @@ struct FuncDef : public Definition {
 	virtual void emitSource() const ;
 };
 
-struct ExprStmt : public Stmt {
+class ExprStmt : public Stmt {
+public:
 	Expr & expr;
 	ExprStmt(Expr & expr) : expr(expr) {};
 	virtual llvm::Value * codeGen(CGContext*);
 	virtual void emitSource() const ;
 };
 
-struct Return : public Stmt {
+class Return : public Stmt {
+public:
 	Expr * ret;
 	Return(Expr * ret) : ret(ret) {};
 	virtual llvm::Value * codeGen(CGContext*);

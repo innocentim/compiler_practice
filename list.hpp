@@ -1,8 +1,6 @@
 #ifndef __LIST_HPP__
 #define __LIST_HPP__
 
-namespace std {
-
 template<class T>
 class list {
     class _node {
@@ -80,5 +78,4 @@ public:
     const_iterator end() const { return const_iterator(head); };
 };
 
-};
 #endif
