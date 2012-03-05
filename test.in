@@ -1,8 +1,8 @@
 int delta
 int add(int a){
-	a = a + delta
-	return a
+    a = a + delta
+    return a
 }
 void init(int _delta) {
-	delta = _delta
+    delta = _delta
 }

@@ -61,9 +61,8 @@ Value * FactorNum::codeGen(CGContext * context){
 
 Value * FactorStr::codeGen(CGContext * context){
 	type = "string";
-	Type * type = ArrayType::get(Type::getInt8Ty(getGlobalContext()), str.size() + 1);
-	Constant * temp = ConstantArray::get(getGlobalContext(), str);
-	Constant * s = new GlobalVariable(*module, type, true, GlobalValue::PrivateLinkage, temp, ".str");
+	Constant * temp = ConstantDataArray::getString(getGlobalContext(), str, true);
+	Constant * s = new GlobalVariable(*module, temp->getType(), true, GlobalValue::PrivateLinkage, temp, ".str");
 	std::vector<Value*> idxList;
 	idxList.push_back(ConstantInt::get(Type::getInt64Ty(getGlobalContext()), 0, true));
 	idxList.push_back(ConstantInt::get(Type::getInt64Ty(getGlobalContext()), 0, true));
@@ -170,7 +169,7 @@ Value * FuncDef::codeGen(CGContext * context){
 		new StoreInst(ait, (**it).codeGen(cur), false, &f->getBasicBlockList().back());
 	}
 	body.codeGen(cur);
-	ReturnInst::Create(getGlobalContext(), Constant::getNullValue(f->getReturnType()),&f->getBasicBlockList().back());
+	ReturnInst::Create(getGlobalContext(), &f->getBasicBlockList().back());
 	return NULL;
 };
 
