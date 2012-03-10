@@ -24,15 +24,13 @@ class list {
         newNode->next->prev = newNode;
         _size++;
     };
-    T _remove(_node * now) {
-        T ret = now->data;
+    void _remove(_node * now) {
         if (_size > 0) {
             now->prev->next = now->next;
             now->next->prev = now->prev;
             delete now;
             _size--;
         }
-        return ret;
     };
 public:
     struct iterator {
@@ -65,9 +63,9 @@ public:
         }
     }
     void push_front(const T & data) { _insert(head, data); };
-    T pop_front() { return _remove(head->next); };
+    void pop_front() { return _remove(head->next); };
     void push_back(const T & data) { _insert(head->prev, data); };
-    T pop_back() { return _remove(head->prev); };
+    void pop_back() { return _remove(head->prev); };
     T & front() { return head->next->data; };
     T & back() { return head->prev->data; };
     unsigned int size() { return _size; };

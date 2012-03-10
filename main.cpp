@@ -13,15 +13,15 @@ extern int yydebug;
 Stmts * top;
 
 int main(int args, char *argv[]){
-	if (args < 2 || !(freopen(argv[1], "r", stdin))){
-		exit(1);
-	}
-	initPunc();
-	initCodeGen();
-//	yydebug = 1;
-	yyparse();
-//	top->emitSource();
-	top->codeGen(new CGContext(NULL, NULL));
-	codeDump();
-	return 0;
+    if (args < 2 || !(freopen(argv[1], "r", stdin))){
+        exit(1);
+    }
+    initPunc();
+    initCodeGen();
+//    yydebug = 1;
+    yyparse();
+//    top->emitSource();
+    top->codeGen(new CGContext(NULL, NULL));
+    codeDump();
+    return 0;
 };
