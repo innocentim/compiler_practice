@@ -68,7 +68,7 @@ int main() {
     // work
     struct student * stu;
     { // constructor of student
-        stu = malloc(sizeof(struct stu));
+        stu = malloc(sizeof(struct student));
         ((struct person *)stu)->vtab = vtab_student;
         ((struct person *)stu)->name = "Prince Arthas, apprentice of Uther";
     }
