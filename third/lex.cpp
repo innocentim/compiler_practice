@@ -3,7 +3,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-enum token {
+enum Token {
     identifier,
     constant_int,
     kwd_return,
@@ -32,10 +32,10 @@ public:
         int len = strlen(str);
         for (int i = 0; i < len; i++) {
             char ch = str[i];
-            if (temp->children[ch] == NULL) {
-                temp->children[ch] = new Trie();
+            if (temp->children[(unsigned char)ch] == NULL) {
+                temp->children[(unsigned char)ch] = new Trie();
             }
-            temp = temp->children[ch];
+            temp = temp->children[(unsigned char)ch];
         }
         temp->data = token;
     };
@@ -45,10 +45,10 @@ public:
         int len = strlen(str);
         for (int i = 0; i < len; i++) {
             char ch = str[i];
-            if (temp->children[ch] == NULL) {
+            if (temp->children[(unsigned char)ch] == NULL) {
                 return -1;
             }
-            temp = temp->children[ch];
+            temp = temp->children[(unsigned char)ch];
         }
         return temp->data;
     };
@@ -118,7 +118,7 @@ int main(int argc, char ** argv) {
         }
         printf("%d", token);
         if (token == constant_int) {
-            printf(" %d", num_int);
+            printf(" %lld", num_int);
         }
         printf("\n");
     }
