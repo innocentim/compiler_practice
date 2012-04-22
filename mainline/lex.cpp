@@ -2,23 +2,11 @@
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
-
-enum Token {
-    identifier,
-    constant_int,
-    kwd_return,
-    lparen, // (
-    rparen, // )
-    lbrace, // {
-    rbrace, // }
-    equ, // =
-    equequ, // ==
-    plus, // +
-    eof,
-};
+#include <iostream>
+#include "lex.hpp"
 
 class Trie {
-    int data;
+    Token data;
     Trie * children[256]; 
     void _print() {
         printf("%d [label=\"%d\"]\n", this, data);
@@ -35,7 +23,7 @@ public:
         memset(children, 0, 256 * sizeof(Trie*));
     };
 
-    void insert(const char * str, int token) {
+    void insert(const char * str, Token token) {
         Trie * temp = this;
         int len = strlen(str);
         for (int i = 0; i < len; i++) {
@@ -48,20 +36,7 @@ public:
         temp->data = token;
     };
 
-    int operator[](const char * str) {
-        Trie * temp = this;
-        int len = strlen(str);
-        for (int i = 0; i < len; i++) {
-            char ch = str[i];
-            if (temp->children[(unsigned char)ch] == NULL) {
-                return -1;
-            }
-            temp = temp->children[(unsigned char)ch];
-        }
-        return temp->data;
-    };
-
-    int getData() {
+    Token getData() {
         return data;
     };
 
@@ -70,11 +45,19 @@ public:
         _print();
         printf("}\n");
     };
+
+    Trie * next(char last) {
+        return children[last];
+    };
+
+    Token get_data() {
+        return data;
+    };
 };
 
 static Trie punc_map;
-std::string iden_str;
-long long num_int;
+Token tokens[1024];
+int token_n = 0;
 
 inline
 bool isalpha(char ch) {
@@ -86,29 +69,44 @@ bool isdigit(char ch) {
     return '0' <= ch && ch <= '9';
 };
 
-int lex() {
+Token lex() {
     static char last = ' ';
     while (last == '\n' || last == '\r' || last == ' ' || last == '\t') {
         last = getchar();
     }
     if (isalpha(last) || last == '_') { // identifier := [_a-zA-Z][_a-zA-Z0-9]*
-        iden_str = "";
+        std::string & iden_str = *(new std::string);
         iden_str += last;
         while (isalpha(last = getchar()) || last == '_' || isdigit(last)) {
             iden_str += last;
         }
         if (iden_str == "return") {
-            return kwd_return;
+            delete &iden_str;
+            return Token(kwd_return);
         }
-        return identifier;
+        return Token(identifier, &iden_str);
     } else if (isdigit(last)) { // constant_number := [0-9]+
+        long long & num_int = *(new long long);
         num_int = last - '0';
         while (isdigit(last = getchar())) {
             num_int = num_int * 10 + last - '0';
         }
-        return constant_int;
-    } 
-    return -1;
+        return Token(constant_int, &num_int);
+    } else if (last == EOF) {
+        return Token(eof);
+    }
+    Trie * temp = &punc_map;
+    Trie * last_trie;
+    static int count = 0;
+    while (1) {
+        last_trie = temp;
+        temp = temp->next(last);
+        if (temp == NULL) {
+            break;
+        }
+        last = getchar();
+    }
+    return Token(last_trie->get_data());
 };
 
 void init() {
@@ -117,9 +115,12 @@ void init() {
     punc_map.insert("{", lbrace);
     punc_map.insert("}", rbrace);
     punc_map.insert("=", equ);
-    punc_map.insert("==", equequ);
     punc_map.insert("+", plus);
+    punc_map.insert("*", star);
+    punc_map.insert(",", comma);
 };
+
+extern void parse();
 
 int main(int argc, char ** argv) {
     if (argc < 2) {
@@ -127,18 +128,14 @@ int main(int argc, char ** argv) {
     }
     freopen(argv[1], "r", stdin);
     init();
-    punc_map.print();
-    //while (1) {
-    //    int token = lex();
-    //    if (token < 0) {
-    //        break;
-    //    }
-    //    printf("%d", token);
-    //    if (token == constant_int) {
-    //        printf(" %lld", num_int);
-    //    }
-    //    printf("\n");
-    //}
+    while (1) {
+        Token token = lex();
+        if (token < 0 || token == eof) {
+            break;
+        }
+        tokens[token_n++] = token;
+    }
+    parse();
 
     return 0;
-};
+}
