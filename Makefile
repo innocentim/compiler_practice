@@ -3,8 +3,8 @@ OBJS = lexer.o main.o parser.o code_gen.o emit_source.o
 YACC_OBJ = parser.cpp
 CC = g++
 YACC = yacc
-YACC_FLAGS = -d -t --locations -k
-COMPILE_FLAGS = -Wall -ggdb `llvm-config --cppflags`
+YACC_FLAGS = -d -t
+COMPILE_FLAGS = -Wall -g `llvm-config --cppflags`
 LINK_FLAGS = `llvm-config --ldflags --libs core`
 
 all : $(TARGET)
@@ -21,7 +21,7 @@ $(YACC_OBJ) : %.cpp : %.y
 code_gen.o lexer.o : parser.cpp
 
 clean :
-	rm -f $(TARGET) $(OBJS) $(OBJS:.o=.d) $(YACC_OBJ:.cpp=.o) $(YACC_OBJ) $(YACC_OBJ:.cpp=.hpp)
+	rm -f $(TARGET) $(OBJS) $(OBJS:.o=.d) $(YACC_OBJ:.cpp=.o) $(YACC_OBJ) $(YACC_OBJ:.cpp=.h)
 
 -include $(OBJS:.o=.d)
 

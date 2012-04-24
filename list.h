@@ -1,5 +1,5 @@
-#ifndef __LIST_HPP__
-#define __LIST_HPP__
+#ifndef __LIST_H__
+#define __LIST_H__
 
 template<class T>
 class list {

@@ -1,5 +1,5 @@
-#include "AST.hpp"
-#include "parser.hpp"
+#include "AST.h"
+#include "parser.h"
 #include <cstdio>
 #include <cstdlib>
 

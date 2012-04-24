@@ -1,5 +1,5 @@
 %{
-	#include "AST.hpp"
+	#include "AST.h"
 	#include <cstdio>
 
 	extern int yylex();

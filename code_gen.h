@@ -1,7 +1,7 @@
 #ifndef __CODEGEN_H__
 #define __CODEGEN_H__
 
-#include "AST.hpp"
+#include "AST.h"
 #include <llvm/Function.h>
 #include <string>
 #include <map>

@@ -1,4 +1,4 @@
-#include "AST.hpp"
+#include "AST.h"
 #include <cstdio>
 
 static int iden = 0;

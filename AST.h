@@ -1,7 +1,7 @@
 #ifndef __AST_H__
 #define __AST_H__
 
-#include "list.hpp"
+#include "list.h"
 #include <string>
 #include <llvm/Value.h>
 

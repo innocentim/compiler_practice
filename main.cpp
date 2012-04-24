@@ -1,6 +1,6 @@
-#include "AST.hpp"
-#include "code_gen.hpp"
-#include "parser.hpp"
+#include "AST.h"
+#include "code_gen.h"
+#include "parser.h"
 #include <cstdio>
 #include <cstdlib>
 

@@ -1,6 +1,6 @@
-#include "AST.hpp"
-#include "code_gen.hpp"
-#include "parser.hpp"
+#include "AST.h"
+#include "code_gen.h"
+#include "parser.h"
 #include <llvm/Constants.h>
 #include <llvm/Type.h>
 #include <llvm/LLVMContext.h>
@@ -61,7 +61,7 @@ Value * FactorNum::codeGen(CGContext * context){
 
 Value * FactorStr::codeGen(CGContext * context){
     type = "string";
-    Constant * temp = ConstantDataArray::getString(getGlobalContext(), str, true);
+    Constant * temp = ConstantArray::get(getGlobalContext(), str, true);
     Constant * s = new GlobalVariable(*module, temp->getType(), true, GlobalValue::PrivateLinkage, temp, ".str");
     std::vector<Value*> idxList;
     idxList.push_back(ConstantInt::get(Type::getInt64Ty(getGlobalContext()), 0, true));
@@ -186,7 +186,7 @@ Value * Return::codeGen(CGContext * context){
 };
 
 void initCodeGen(){
-    module->setTargetTriple("x86_64-unknown-linux-gnu");
+    module->setTargetTriple("x86_64-linux-gnu");
     op_map[PLUS] = Instruction::Add;
     op_map[MINUS] = Instruction::Sub;
     op_map[STAR] = Instruction::Mul;
