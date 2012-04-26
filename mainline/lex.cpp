@@ -9,7 +9,7 @@ class Trie {
     Token data;
     Trie * children[256]; 
     void _print() {
-        printf("%d [label=\"%d\"]\n", this, data);
+        printf("%d [label=\"%d\"]\n", this, (int)data);
         for (int i = 0; i < 256; i++) {
             if (children[i]) {
                 printf("%d -> %d\n [label=\"%c\"]", this, children[i], i);
@@ -34,10 +34,6 @@ public:
             temp = temp->children[(unsigned char)ch];
         }
         temp->data = token;
-    };
-
-    Token getData() {
-        return data;
     };
 
     void print() {
@@ -106,6 +102,13 @@ Token lex() {
         }
         last = getchar();
     }
+    if (last_trie->get_data() == slashslash) {
+        while (last != '\n') {
+            last = getchar();
+        }
+        last = getchar();
+        return lex();
+    }
     return Token(last_trie->get_data());
 };
 
@@ -118,9 +121,10 @@ void init() {
     punc_map.insert("+", plus);
     punc_map.insert("*", star);
     punc_map.insert(",", comma);
+    punc_map.insert("//", slashslash);
 };
 
-extern void parse();
+extern void parse_init();
 
 int main(int argc, char ** argv) {
     if (argc < 2) {
@@ -128,14 +132,18 @@ int main(int argc, char ** argv) {
     }
     freopen(argv[1], "r", stdin);
     init();
+    Token token;
     while (1) {
-        Token token = lex();
-        if (token < 0 || token == eof) {
+        token = lex();
+        if (token < 0) {
+            exit(1);
+        }
+        if (token == eof) {
             break;
         }
         tokens[token_n++] = token;
     }
-    parse();
+    parse_init();
 
     return 0;
 }

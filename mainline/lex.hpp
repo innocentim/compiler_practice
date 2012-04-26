@@ -1,7 +1,7 @@
 #ifndef __LEX_HPP__
 #define __LEX_HPP__
 
-enum {
+enum tokenType {
     identifier,
     constant_int,
     kwd_return,
@@ -13,7 +13,8 @@ enum {
     plus, // +
     star, // *
     comma, // ,
-    eof,
+    slashslash, // //
+    eof
 };
 
 class Token {
