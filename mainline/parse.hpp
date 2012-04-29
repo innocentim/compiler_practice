@@ -9,12 +9,17 @@
 typedef std::string Identifier;
 class Type;
 class Definition;
+class FuncDef;
+class VarDef;
 class Expr;
 class Operator;
 
 class Top {
 public:
     std::list<Definition *> defList;
+    std::map<std::string, Type *> typeManager;
+    std::map<std::string, FuncDef *> funcManager;
+    std::map<std::string, VarDef *> varManager;
 
     virtual void dump() const;
 };

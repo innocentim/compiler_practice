@@ -14,9 +14,6 @@ static int current;
 static Top top;
 static FuncDef * funcNow;
 
-std::map<std::string, Type *> typeManager;
-std::map<std::string, FuncDef *> funcManager;
-std::map<std::string, VarDef *> varManager;
 const Operator * binOrLeftUnaryManager[256] = { 0 };
 const Operator * rightUnaryManager[256] = { 0 };
 bool leftAssoManager[100] = { 0 };
@@ -48,10 +45,10 @@ Expr * parse_return() {
 
 CallNode * parse_call_node() {
     CallNode * ret;
-    if (!funcManager.count(*((std::string *)tokens[current].data))) {
+    if (!top.funcManager.count(*((std::string *)tokens[current].data))) {
         error("function not find");
     }
-    ret = new CallNode(funcManager[*((std::string *)tokens[current].data)]);
+    ret = new CallNode(top.funcManager[*((std::string *)tokens[current].data)]);
     eat(identifier);
     eat(lparen);
     std::list<VarDef *>::const_iterator iter, e;
@@ -74,8 +71,8 @@ VarNode * parse_var_node() {
     if (funcNow->varManager.count(str)) {
         return new VarNode(funcNow->varManager.find(str)->second);
     }
-    if (varManager.count(str)) {
-        return new VarNode(varManager[str]);
+    if (top.varManager.count(str)) {
+        return new VarNode(top.varManager[str]);
     }
     error("variable not find");
 };
@@ -154,26 +151,26 @@ VarDef * parse_var() {
     eat(identifier);
     eat(identifier);
 
-    if (!typeManager.count(type)) {
+    if (!top.typeManager.count(type)) {
         error("no such type");
     }
-    std::map<std::string, VarDef *> & manager = funcNow ? funcNow->varManager : varManager;
+    std::map<std::string, VarDef *> & manager = funcNow ? funcNow->varManager : top.varManager;
     if (manager.count(name)) {
         error("variable duplicated definition");
     }
-    return manager[name] = new VarDef(typeManager[type], name);
+    return manager[name] = new VarDef(top.typeManager[type], name);
 };
 
 FuncDef * parse_func() {
     Identifier & funcType = *(std::string *)tokens[current].data;
     Identifier & funcName = *(std::string *)tokens[current + 1].data;
-    FuncDef * ret = new FuncDef(typeManager[funcType], funcName);
+    FuncDef * ret = new FuncDef(top.typeManager[funcType], funcName);
     eat(identifier);
     eat(identifier);
-    if (!typeManager.count(funcType)) {
+    if (!top.typeManager.count(funcType)) {
         error("no such type");
     }
-    if (funcManager.count(funcName)) {
+    if (top.funcManager.count(funcName)) {
         error("function duplicated definition");
     }
     eat(lparen);
@@ -183,13 +180,13 @@ FuncDef * parse_func() {
             Identifier & name = *(std::string *)tokens[current + 1].data;
             eat(identifier);
             eat(identifier);
-            if (!typeManager.count(type)) {
+            if (!top.typeManager.count(type)) {
                 error("no such type");
             }
             if (ret->varManager.count(name)) {
                 error("duplicated definition");
             }
-            ret->arguments.push_back(ret->varManager[name] = new VarDef(typeManager[type], name));
+            ret->arguments.push_back(ret->varManager[name] = new VarDef(top.typeManager[type], name));
             if (tokens[current] != rparen) {
                 eat(comma);
             } else {
@@ -220,7 +217,7 @@ FuncDef * parse_func() {
 out:
     eat(rbrace);
     funcNow = NULL;
-    return funcManager[funcName] = ret;
+    return top.funcManager[funcName] = ret;
 };
 
 Top * parse_top() {
@@ -252,12 +249,12 @@ void parse_init() {
     funcNow = NULL;
 
     intType.name = "int";
-    typeManager["int"] = &intType;
+    top.typeManager["int"] = &intType;
 
     leftAssoManager[10] = false; // =
     leftAssoManager[20] = true; // + -
     leftAssoManager[30] = true; // * /
-    leftAssoManager[40] = false; // a++, which should be larger than ++a
+    leftAssoManager[40] = false; // a++
     binOrLeftUnaryManager[equ] = &opAssign;
     binOrLeftUnaryManager[plus] = &opAdd;
     rightUnaryManager[plus] = &opPos;
