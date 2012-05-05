@@ -42,8 +42,8 @@ void FuncDef::dump() const {
         }
     }
     {
-        std::list<Expr *>::const_iterator iter;
-        for (iter = exprList.begin(); iter != exprList.end(); ++iter) {
+        std::list<Statement *>::const_iterator iter;
+        for (iter = stmtList.begin(); iter != stmtList.end(); ++iter) {
             printIden();
             (*iter)->dump();
             printf("\n");
@@ -53,7 +53,7 @@ void FuncDef::dump() const {
     printf("}\n");
 };
 
-void OpNode::dump() const {
+void Expr::dump() const {
     printf("(");
     if (left) {
         left->dump();

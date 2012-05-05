@@ -11,7 +11,7 @@ class Type;
 class Definition;
 class FuncDef;
 class VarDef;
-class Expr;
+class Statement;
 class Operator;
 
 class Top {
@@ -42,35 +42,35 @@ public:
 class FuncDef : public Definition {
 public:
     std::list<VarDef *> arguments;
-    std::list<Expr *> exprList;
+    std::list<Statement *> stmtList;
     std::map<std::string, VarDef *> varManager;
 
     FuncDef(Type * type, const Identifier & name) : Definition(type, name) {};
     virtual void dump() const;
 };
 
-class Expr {
+class Statement {
 public:
     Type * type;
 
-    Expr() : type(NULL) {};
+    Statement() : type(NULL) {};
     virtual void dump() const = 0;
 };
 
-class OpNode : public Expr {
+class Expr : public Statement {
 public:
     const Operator * op;
-    OpNode * left;
-    OpNode * right;
+    Expr * left;
+    Expr * right;
 
-    OpNode(const Operator * op) : Expr(), op(op), left(NULL), right(NULL) {};
+    Expr(const Operator * op) : Statement(), op(op), left(NULL), right(NULL) {};
     virtual void dump() const;
 };
 
 extern const Operator opFactor;
-class FactorNode : public OpNode {
+class FactorNode : public Expr {
 public:
-    FactorNode() : OpNode(&opFactor) {};
+    FactorNode() : Expr(&opFactor) {};
     virtual void dump() const = 0;
 };
 
@@ -105,7 +105,7 @@ public:
     virtual void dump() const;
 };
 
-class Return : public Expr {
+class Return : public Statement {
 public:
     const Expr * value;
     

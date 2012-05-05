@@ -38,7 +38,7 @@ bool is_const(int token) {
 };
 
 Expr * parse_expr();
-Expr * parse_return() {
+Statement * parse_return() {
     eat(kwd_return);
     return new Return(parse_expr());
 };
@@ -98,17 +98,17 @@ FactorNode * parse_factor() {
 };
 
 Expr * parse_expr() {
-    std::list<OpNode *> stack;
-    OpNode _t(&opRoot);
+    std::list<Expr *> stack;
+    Expr _t(&opRoot);
     stack.push_back(&_t);
     bool filled = false;
     while (1) {
         int tok = tokens[current];
-        OpNode * now = stack.back();
+        Expr * now = stack.back();
         if (filled) { // binary or left-unary
             if (binOrLeftUnaryManager[tok]) {
                 int prec = binOrLeftUnaryManager[tok]->prec;
-                OpNode * newNode = new OpNode(binOrLeftUnaryManager[tok]);
+                Expr * newNode = new Expr(binOrLeftUnaryManager[tok]);
                 while (now->op->prec > prec || (now->op->prec == prec && leftAssoManager[prec])) {
                     stack.pop_back();
                     now = stack.back();
@@ -130,7 +130,7 @@ Expr * parse_expr() {
                 stack.push_back(now->right = parse_factor());
                 filled = true;
             } else if (rightUnaryManager[tok]) {
-                stack.push_back(now->right = new OpNode(rightUnaryManager[tok]));
+                stack.push_back(now->right = new Expr(rightUnaryManager[tok]));
                 current++;
                 filled = false;
             } else {
@@ -200,12 +200,12 @@ FuncDef * parse_func() {
     while (1) {
         switch (tokens[current]) {
         case kwd_return:
-            ret->exprList.push_back(parse_return());
+            ret->stmtList.push_back(parse_return());
             break;
         case identifier:
             if (tokens[current + 1] != identifier) {
         default:
-                ret->exprList.push_back(parse_expr());
+                ret->stmtList.push_back(parse_expr());
                 break;
             }
             top.defList.push_back(parse_var());
