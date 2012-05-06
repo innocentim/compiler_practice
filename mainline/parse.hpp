@@ -14,13 +14,25 @@ class VarDef;
 class Statement;
 class Operator;
 
-class Top {
+class Environment {
+public:
+    virtual std::map<std::string, VarDef *> & getVarManager() = 0;
+    virtual const std::map<std::string, VarDef *> & getVarManager() const = 0;
+};
+
+class Top : public Environment {
 public:
     std::list<Definition *> defList;
     std::map<std::string, Type *> typeManager;
     std::map<std::string, FuncDef *> funcManager;
     std::map<std::string, VarDef *> varManager;
 
+    virtual std::map<std::string, VarDef *> & getVarManager() {
+        return varManager;
+    };
+    virtual const std::map<std::string, VarDef *> & getVarManager() const {
+        return varManager;
+    };
     virtual void dump() const;
 };
 
@@ -39,11 +51,23 @@ public:
     virtual void dump() const;
 };
 
+class Block : public Environment {
+public:
+    std::list<Statement *> stmtList;
+    std::map<std::string, VarDef *> varManager;
+
+    virtual std::map<std::string, VarDef *> & getVarManager() {
+        return varManager;
+    };
+    virtual const std::map<std::string, VarDef *> & getVarManager() const {
+        return varManager;
+    };
+};
+
 class FuncDef : public Definition {
 public:
     std::list<VarDef *> arguments;
-    std::list<Statement *> stmtList;
-    std::map<std::string, VarDef *> varManager;
+    Block block;
 
     FuncDef(Type * type, const Identifier & name) : Definition(type, name) {};
     virtual void dump() const;
