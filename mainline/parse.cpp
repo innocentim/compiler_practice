@@ -12,17 +12,61 @@ extern Token tokens[];
 extern int token_n;
 static int current;
 static Top top;
+static OperatorManager & opManager = top.opManager;
 
-const Operator * binOrLeftUnaryManager[256] = { 0 };
-const Operator * rightUnaryManager[256] = { 0 };
-bool leftAssoManager[100] = { 0 };
-const Operator opRoot("", 0, Operator::right_unary);
-const Operator opFactor("", 99, Operator::factor);
-const Operator opAssign("=", 10, Operator::binary);
-const Operator opAdd("+", 20, Operator::binary);
-const Operator opPos("+", 40, Operator::right_unary);
-const Operator opMul("*", 30, Operator::binary);
-Type intType;
+const Operator Operator::opRoot("", 0, Operator::right_unary);
+const Operator Operator::opFactor("", 99, Operator::factor);
+const Operator Operator::opAssign("=", 10, Operator::binary);
+const Operator Operator::opAdd("+", 20, Operator::binary);
+const Operator Operator::opPos("+", 40, Operator::right_unary);
+const Operator Operator::opMul("*", 30, Operator::binary);
+
+void TypeManager::regi(const char * s, const Type & type) {
+    if (_map.count(s)) {
+        error("duplicate type registor");
+    }
+    _map[s] = &type;
+};
+
+OperatorManager::OperatorManager() {
+};
+
+void OperatorManager::init() {
+    memset(binOrLeftUnaryManager, 0, 256);
+    memset(rightUnaryManager, 0, 256);
+    regi(equ, Operator::opAssign, false);
+    regi(plus, Operator::opAdd, true);
+    regi(plus, Operator::opPos, true);
+    regi(star, Operator::opMul, true);
+};
+
+void OperatorManager::regi(int tok, const Operator & op, bool leftAsso) {
+    //printf("%d %d\n", tok, op.type);
+    if (leftAssoManager[op.prec]) {
+        if (leftAssoManager[op.prec] != leftAsso) {
+            error("inconsistent left associate");
+        }
+    } else {
+        leftAssoManager[op.prec] = leftAsso;
+    }
+    switch (op.type) {
+    case Operator::binary:
+    case Operator::left_unary:
+        if (opManager.binOrLeftUnaryManager[tok]) {
+            error("duplicate operator registor");
+        }
+        opManager.binOrLeftUnaryManager[tok] = &op;
+        break;
+    case Operator::right_unary:
+        if (opManager.rightUnaryManager[tok]) {
+            error("duplicate operator registor");
+        }
+        opManager.rightUnaryManager[tok] = &op;
+        break;
+    default:
+        error("unexpected operator registor");
+    }
+};
 
 static void eat(int token) {
     if (tokens[current] == token) {
@@ -36,13 +80,13 @@ bool is_const(int token) {
     return token == constant_int;
 };
 
-Expr * parse_expr(Environment & env);
-Statement * parse_return(Environment & env) {
+Expr * parse_expr(FuncDef * env);
+Statement * parse_return(FuncDef * env) {
     eat(kwd_return);
     return new Return(parse_expr(env));
 };
 
-CallNode * parse_call_node(Environment & env) {
+CallNode * parse_call_node(FuncDef * env) {
     CallNode * ret;
     if (!top.funcManager.count(*((std::string *)tokens[current].data))) {
         error("function not find");
@@ -64,11 +108,11 @@ CallNode * parse_call_node(Environment & env) {
     return ret;
 };
 
-VarNode * parse_var_node(Environment & env) {
+VarNode * parse_var_node(FuncDef * env) {
     std::string & str = *(std::string *)tokens[current].data;
     eat(identifier);
-    if (env.getVarManager().count(str)) {
-        return new VarNode(env.getVarManager().find(str)->second);
+    if (env->varManager.count(str)) {
+        return new VarNode(env->varManager.find(str)->second);
     }
     if (top.varManager.count(str)) {
         return new VarNode(top.varManager[str]);
@@ -82,7 +126,7 @@ ConstantNumNode * parse_const_int() {
     return ret;
 };
 
-FactorNode * parse_factor(Environment & env) {
+FactorNode * parse_factor(FuncDef * env) {
     switch (tokens[current]) {
     case identifier:
         if (tokens[current + 1] == lparen) { // CallNode
@@ -96,19 +140,19 @@ FactorNode * parse_factor(Environment & env) {
     }
 };
 
-Expr * parse_expr(Environment & env) {
+Expr * parse_expr(FuncDef * env) {
     std::list<Expr *> stack;
-    Expr _t(&opRoot);
+    Expr _t(&Operator::opRoot);
     stack.push_back(&_t);
     bool filled = false;
     while (1) {
         int tok = tokens[current];
         Expr * now = stack.back();
         if (filled) { // binary or left-unary
-            if (binOrLeftUnaryManager[tok]) {
-                int prec = binOrLeftUnaryManager[tok]->prec;
-                Expr * newNode = new Expr(binOrLeftUnaryManager[tok]);
-                while (now->op->prec > prec || (now->op->prec == prec && leftAssoManager[prec])) {
+            if (opManager.binOrLeftUnaryManager[tok]) {
+                int prec = opManager.binOrLeftUnaryManager[tok]->prec;
+                Expr * newNode = new Expr(opManager.binOrLeftUnaryManager[tok]);
+                while (now->op->prec > prec || (now->op->prec == prec && opManager.leftAssoManager[prec])) {
                     stack.pop_back();
                     now = stack.back();
                 }
@@ -128,8 +172,8 @@ Expr * parse_expr(Environment & env) {
             if (tok == identifier || is_const(tok)) {
                 stack.push_back(now->right = parse_factor(env));
                 filled = true;
-            } else if (rightUnaryManager[tok]) {
-                stack.push_back(now->right = new Expr(rightUnaryManager[tok]));
+            } else if (opManager.rightUnaryManager[tok]) {
+                stack.push_back(now->right = new Expr(opManager.rightUnaryManager[tok]));
                 current++;
                 filled = false;
             } else {
@@ -144,7 +188,7 @@ Expr * parse_expr(Environment & env) {
     return NULL;
 };
 
-VarDef * parse_var(Environment & env) {
+VarDef * parse_var(FuncDef * env) {
     Identifier & type = *(std::string *)tokens[current].data;
     Identifier & name = *(std::string *)tokens[current + 1].data;
     eat(identifier);
@@ -153,10 +197,10 @@ VarDef * parse_var(Environment & env) {
     if (!top.typeManager.count(type)) {
         error("no such type");
     }
-    if (env.getVarManager().count(name)) {
+    if (env->varManager.count(name)) {
         error("variable duplicated definition");
     }
-    return env.getVarManager()[name] = new VarDef(top.typeManager[type], name);
+    return env->varManager[name] = new VarDef(top.typeManager[type], name);
 };
 
 FuncDef * parse_func() {
@@ -181,10 +225,10 @@ FuncDef * parse_func() {
             if (!top.typeManager.count(type)) {
                 error("no such type");
             }
-            if (ret->block.varManager.count(name)) {
+            if (ret->varManager.count(name)) {
                 error("duplicated definition");
             }
-            ret->arguments.push_back(ret->block.varManager[name] = new VarDef(top.typeManager[type], name));
+            ret->arguments.push_back(ret->varManager[name] = new VarDef(top.typeManager[type], name));
             if (tokens[current] != rparen) {
                 eat(comma);
             } else {
@@ -197,15 +241,15 @@ FuncDef * parse_func() {
     while (1) {
         switch (tokens[current]) {
         case kwd_return:
-            ret->block.stmtList.push_back(parse_return(ret->block));
+            ret->stmtList.push_back(parse_return(ret));
             break;
         case identifier:
             if (tokens[current + 1] != identifier) {
         default:
-                ret->block.stmtList.push_back(parse_expr(ret->block));
+                ret->stmtList.push_back(parse_expr(ret));
                 break;
             }
-            top.defList.push_back(parse_var(ret->block));
+            top.defList.push_back(parse_var(ret));
             break;
         case rbrace:
             goto out;
@@ -227,7 +271,7 @@ Top * parse_top() {
             if (tokens[current + 2] == lparen) {
                 temp = parse_func();
             } else {
-                temp = parse_var(top);
+                temp = parse_var(NULL);
             }
             top.defList.push_back(temp);
             temp->dump();
@@ -240,20 +284,12 @@ Top * parse_top() {
     return &top;
 };
 
+extern void code_gen();
+
 void parse_init() {
     current = 0;
-
-    intType.name = "int";
-    top.typeManager["int"] = &intType;
-
-    leftAssoManager[10] = false; // =
-    leftAssoManager[20] = true; // + -
-    leftAssoManager[30] = true; // * /
-    leftAssoManager[40] = false; // a++
-    binOrLeftUnaryManager[equ] = &opAssign;
-    binOrLeftUnaryManager[plus] = &opAdd;
-    rightUnaryManager[plus] = &opPos;
-    binOrLeftUnaryManager[star] = &opMul;
-
+    top.typeManager.init();
+    top.opManager.init();
     parse_top();
+    code_gen();
 };

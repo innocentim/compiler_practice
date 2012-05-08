@@ -5,6 +5,7 @@
 #include <list>
 #include <map>
 #include <cassert>
+#include <cstring>
 
 typedef std::string Identifier;
 class Type;
@@ -14,16 +15,73 @@ class VarDef;
 class Statement;
 class Operator;
 
-class Environment {
+class Type {
 public:
-    virtual std::map<std::string, VarDef *> & getVarManager() = 0;
-    virtual const std::map<std::string, VarDef *> & getVarManager() const = 0;
+    Identifier name;
+    Type(const Identifier & name) : name(name) {};
 };
 
-class Top : public Environment {
+class TypeManager {
+    std::map<Identifier, const Type *> _map;
+public:
+    const Type intType;
+    TypeManager() : intType("int") {
+    };
+    void init() {
+        regi("int", intType);
+    };
+
+    void regi(const char * s, const Type & type);
+    int count(const Identifier & iden) {
+        return _map.count(iden);
+    };
+    const Type * operator[] (const Identifier & type) {
+        return _map[type];
+    };
+};
+
+class Operator {
+    std::string name;
+public:
+    static const Operator opRoot;
+    static const Operator opFactor;
+    static const Operator opAssign;
+    static const Operator opAdd;
+    static const Operator opPos;
+    static const Operator opMul;
+    enum OperatorType{
+        binary,
+        left_unary,
+        right_unary,
+        factor,
+    };
+    OperatorType type;
+    const int prec;
+
+    Operator(const std::string & name, int prec, OperatorType type) : name(name), prec(prec), type(type) {
+    };
+    virtual void dump() const;
+};
+
+class OperatorManager {
+    class Trie {
+    };
+public:
+    const Operator * binOrLeftUnaryManager[256];
+    const Operator * rightUnaryManager[256];
+    bool leftAssoManager[100];
+
+    OperatorManager();
+    void init();
+
+    void regi(int tok, const Operator & op, bool leftAsso);
+};
+
+class Top {
 public:
     std::list<Definition *> defList;
-    std::map<std::string, Type *> typeManager;
+    TypeManager typeManager;
+    OperatorManager opManager;
     std::map<std::string, FuncDef *> funcManager;
     std::map<std::string, VarDef *> varManager;
 
@@ -38,38 +96,26 @@ public:
 
 class Definition {
 public:
-    Type * type;
+    const Type * type;
     Identifier name;
 
-    Definition(Type * type, const Identifier & name) : type(type), name(name) {};
+    Definition(const Type * type, const Identifier & name) : type(type), name(name) {};
     virtual void dump() const = 0;
 };
 
 class VarDef : public Definition {
 public:
-    VarDef(Type * type, const Identifier & name) : Definition(type, name) {};
+    VarDef(const Type * type, const Identifier & name) : Definition(type, name) {};
     virtual void dump() const;
-};
-
-class Block : public Environment {
-public:
-    std::list<Statement *> stmtList;
-    std::map<std::string, VarDef *> varManager;
-
-    virtual std::map<std::string, VarDef *> & getVarManager() {
-        return varManager;
-    };
-    virtual const std::map<std::string, VarDef *> & getVarManager() const {
-        return varManager;
-    };
 };
 
 class FuncDef : public Definition {
 public:
     std::list<VarDef *> arguments;
-    Block block;
+    std::map<std::string, VarDef *> varManager;
+    std::list<Statement *> stmtList;
 
-    FuncDef(Type * type, const Identifier & name) : Definition(type, name) {};
+    FuncDef(const Type * type, const Identifier & name) : Definition(type, name) {};
     virtual void dump() const;
 };
 
@@ -91,10 +137,9 @@ public:
     virtual void dump() const;
 };
 
-extern const Operator opFactor;
 class FactorNode : public Expr {
 public:
-    FactorNode() : Expr(&opFactor) {};
+    FactorNode() : Expr(&Operator::opFactor) {};
     virtual void dump() const = 0;
 };
 
@@ -134,27 +179,6 @@ public:
     const Expr * value;
     
     Return(const Expr * value) : value(value) {};
-    virtual void dump() const;
-};
-
-class Type {
-public:
-    Identifier name;
-};
-
-class Operator {
-    std::string name;
-public:
-    enum OperatorType{
-        binary,
-        left_unary,
-        right_unary,
-        factor,
-    };
-    OperatorType type;
-    const int prec;
-
-    Operator(const std::string & name, int prec, OperatorType type) : name(name), prec(prec), type(type) {};
     virtual void dump() const;
 };
 

@@ -1,6 +1,0 @@
-<map id="G" name="G">
-<area shape="rect" id="node3" href="$lex_8cpp.html#ae1853f4c183d9a348a32c9d34d619bee" title="isalpha" alt="" coords="115,5,176,35"/>
-<area shape="rect" id="node5" href="$lex_8cpp.html#ac75b0dca6f8e49428afbe05f0f98b133" title="isdigit" alt="" coords="117,59,173,88"/>
-<area shape="rect" id="node7" href="$class_trie.html#a69df5eadd6374c6c33a9ce342bfc1e4c" title="Trie::next" alt="" coords="107,112,184,141"/>
-<area shape="rect" id="node9" href="$class_trie.html#a912a4f3ef7b1ddd5fe393d5bb790c023" title="Trie::get_data" alt="" coords="95,165,196,195"/>
-</map>

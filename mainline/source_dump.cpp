@@ -35,7 +35,7 @@ void FuncDef::dump() const {
     iden++;
     {
         std::map<std::string, VarDef *>::const_iterator iter;
-        for (iter = block.getVarManager().begin(); iter != block.getVarManager().end(); ++iter) {
+        for (iter = varManager.begin(); iter != varManager.end(); ++iter) {
             printIden();
             (*iter).second->dump();
             printf("\n");
@@ -43,7 +43,7 @@ void FuncDef::dump() const {
     }
     {
         std::list<Statement *>::const_iterator iter;
-        for (iter = block.stmtList.begin(); iter != block.stmtList.end(); ++iter) {
+        for (iter = stmtList.begin(); iter != stmtList.end(); ++iter) {
             printIden();
             (*iter)->dump();
             printf("\n");

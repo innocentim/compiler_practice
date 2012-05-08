@@ -5,6 +5,9 @@ int add(int a, int delta) {
 
 int main() {
     int a
-    a = 2
+    int b
+    int c
+    int d
+    a = b = c = d = 3
     return add(a, 3)
 }

@@ -1,8 +1,0 @@
-<map id="G" name="G">
-<area shape="rect" id="node7" href="$class_call_node.html" title="CallNode" alt="" coords="5,237,80,267"/>
-<area shape="rect" id="node9" href="$class_constant_node.html" title="ConstantNode" alt="" coords="104,237,211,267"/>
-<area shape="rect" id="node13" href="$class_var_node.html" title="VarNode" alt="" coords="235,237,307,267"/>
-<area shape="rect" id="node2" href="$class_expr.html" title="Expr" alt="" coords="133,83,181,112"/>
-<area shape="rect" id="node4" href="$class_statement.html" title="Statement" alt="" coords="116,5,199,35"/>
-<area shape="rect" id="node11" href="$class_constant_num_node.html" title="ConstantNumNode" alt="" coords="91,315,224,344"/>
-</map>

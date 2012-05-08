@@ -1,6 +1,0 @@
-<map id="G" name="G">
-<area shape="rect" id="node2" href="$class_constant_node.html" title="ConstantNode" alt="" coords="19,237,125,267"/>
-<area shape="rect" id="node4" href="$class_factor_node.html" title="FactorNode" alt="" coords="27,160,117,189"/>
-<area shape="rect" id="node6" href="$class_expr.html" title="Expr" alt="" coords="48,83,96,112"/>
-<area shape="rect" id="node8" href="$class_statement.html" title="Statement" alt="" coords="31,5,113,35"/>
-</map>
