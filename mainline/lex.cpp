@@ -9,10 +9,10 @@ class Trie {
     Token data;
     Trie * children[256]; 
     void _print() {
-        printf("%d [label=\"%d\"]\n", this, (int)data);
+        printf("%lu [label=\"%d\"]\n", (unsigned long)this, (int)data);
         for (int i = 0; i < 256; i++) {
             if (children[i]) {
-                printf("%d -> %d\n [label=\"%c\"]", this, children[i], i);
+                printf("%lu -> %lu\n [label=\"%c\"]", (unsigned long)this, (unsigned long)children[i], i);
                 children[i]->_print();
             }
         }
@@ -43,7 +43,7 @@ public:
     };
 
     Trie * next(char last) {
-        return children[last];
+        return children[(unsigned char)last];
     };
 
     Token get_data() {
@@ -51,7 +51,7 @@ public:
     };
 };
 
-static Trie punc_map;
+static Trie puncMap;
 Token tokens[1024];
 int token_n = 0;
 
@@ -71,57 +71,56 @@ Token lex() {
         last = getchar();
     }
     if (isalpha(last) || last == '_') { // identifier := [_a-zA-Z][_a-zA-Z0-9]*
-        std::string & iden_str = *(new std::string);
-        iden_str += last;
+        std::string & idenStr = *(new std::string);
+        idenStr += last;
         while (isalpha(last = getchar()) || last == '_' || isdigit(last)) {
-            iden_str += last;
+            idenStr += last;
         }
-        if (iden_str == "return") {
-            delete &iden_str;
+        if (idenStr == "return") {
+            delete &idenStr;
             return Token(kwd_return);
         }
-        return Token(identifier, &iden_str);
+        return Token(identifier, &idenStr);
     } else if (isdigit(last)) { // constant_number := [0-9]+
-        long long & num_int = *(new long long);
-        num_int = last - '0';
+        long long & numInt = *(new long long);
+        numInt = last - '0';
         while (isdigit(last = getchar())) {
-            num_int = num_int * 10 + last - '0';
+            numInt = numInt * 10 + last - '0';
         }
-        return Token(constant_int, &num_int);
+        return Token(constant_int, &numInt);
     } else if (last == EOF) {
         return Token(eof);
     }
-    Trie * temp = &punc_map;
-    Trie * last_trie;
-    static int count = 0;
+    Trie * temp = &puncMap;
+    Trie * lastTrie;
     while (1) {
-        last_trie = temp;
+        lastTrie = temp;
         temp = temp->next(last);
         if (temp == NULL) {
             break;
         }
         last = getchar();
     }
-    if (last_trie->get_data() == slashslash) {
+    if (lastTrie->get_data() == slashslash) {
         while (last != '\n') {
             last = getchar();
         }
         last = getchar();
         return lex();
     }
-    return Token(last_trie->get_data());
+    return Token(lastTrie->get_data());
 };
 
 void init() {
-    punc_map.insert("(", lparen);
-    punc_map.insert(")", rparen);
-    punc_map.insert("{", lbrace);
-    punc_map.insert("}", rbrace);
-    punc_map.insert("=", equ);
-    punc_map.insert("+", plus);
-    punc_map.insert("*", star);
-    punc_map.insert(",", comma);
-    punc_map.insert("//", slashslash);
+    puncMap.insert("(", lparen);
+    puncMap.insert(")", rparen);
+    puncMap.insert("{", lbrace);
+    puncMap.insert("}", rbrace);
+    puncMap.insert("=", equ);
+    puncMap.insert("+", plus);
+    puncMap.insert("*", star);
+    puncMap.insert(",", comma);
+    puncMap.insert("//", slashslash);
 };
 
 extern void parse_init();

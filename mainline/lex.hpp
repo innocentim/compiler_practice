@@ -21,7 +21,7 @@ class Token {
     int _token;
 public:
     void * data;
-    Token(int _token = -1, void * data = NULL) : _token(_token), data(data) {};
+    Token(int _token = -1, void * data = 0) : _token(_token), data(data) {};
     operator int() {
         return _token;
     };

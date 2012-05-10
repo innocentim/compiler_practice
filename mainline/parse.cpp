@@ -1,12 +1,14 @@
+#include "lex.hpp"
+#include "parse.hpp"
+#include <llvm/Type.h>
+#include <llvm/DerivedTypes.h>
+#include <list>
+#include <map>
 #include <string>
 #include <cstdio>
 #include <cstdlib>
-#include <list>
-#include <map>
-#include "lex.hpp"
-#include "parse.hpp"
 
-#define error(s) do { fprintf(stderr, "%s\n", s); exit(1); } while (0)
+#define error(s) do { fprintf(stderr, "error: %s\n", s); exit(1); } while (0)
 
 extern Token tokens[];
 extern int token_n;
@@ -14,12 +16,13 @@ static int current;
 static Top top;
 static OperatorManager & opManager = top.opManager;
 
-const Operator Operator::opRoot("", 0, Operator::right_unary);
-const Operator Operator::opFactor("", 99, Operator::factor);
-const Operator Operator::opAssign("=", 10, Operator::binary);
-const Operator Operator::opAdd("+", 20, Operator::binary);
-const Operator Operator::opPos("+", 40, Operator::right_unary);
-const Operator Operator::opMul("*", 30, Operator::binary);
+const Type Type::intType("int", llvm::Type::getInt64Ty(llvm::getGlobalContext()));
+const Operator Operator::opRoot("", 0, Operator::right_unary, true);
+const Operator Operator::opFactor("", 99, Operator::factor, true);
+const Operator Operator::opAssign("=", 10, Operator::binary, false);
+const Operator Operator::opAdd("+", 20, Operator::binary, true);
+const Operator Operator::opPos("+", 40, Operator::right_unary, true);
+const Operator Operator::opMul("*", 30, Operator::binary, true);
 
 void TypeManager::regi(const char * s, const Type & type) {
     if (_map.count(s)) {
@@ -34,20 +37,19 @@ OperatorManager::OperatorManager() {
 void OperatorManager::init() {
     memset(binOrLeftUnaryManager, 0, 256);
     memset(rightUnaryManager, 0, 256);
-    regi(equ, Operator::opAssign, false);
-    regi(plus, Operator::opAdd, true);
-    regi(plus, Operator::opPos, true);
-    regi(star, Operator::opMul, true);
+    regi(equ, Operator::opAssign);
+    regi(plus, Operator::opAdd);
+    regi(plus, Operator::opPos);
+    regi(star, Operator::opMul);
 };
 
-void OperatorManager::regi(int tok, const Operator & op, bool leftAsso) {
-    //printf("%d %d\n", tok, op.type);
+void OperatorManager::regi(int tok, const Operator & op) {
     if (leftAssoManager[op.prec]) {
-        if (leftAssoManager[op.prec] != leftAsso) {
+        if (leftAssoManager[op.prec] != op.leftAsso) {
             error("inconsistent left associate");
         }
     } else {
-        leftAssoManager[op.prec] = leftAsso;
+        leftAssoManager[op.prec] = op.leftAsso;
     }
     switch (op.type) {
     case Operator::binary:
@@ -66,6 +68,22 @@ void OperatorManager::regi(int tok, const Operator & op, bool leftAsso) {
     default:
         error("unexpected operator registor");
     }
+};
+
+void OperatorManager::override(const Operator & op, const FuncDef * func) {
+    Trie * now = &(_map[&op]);
+    std::list<VarDef *>::const_iterator iter = func->arguments.begin();
+    while (iter != func->arguments.end()) {
+        if (now->next((*iter)->type) == 0){
+            now->next((*iter)->type) = new Trie();
+        }
+        now = now->next((*iter)->type);
+        ++iter;
+    }
+    if (now->data) {
+        error("duplicate operator override");
+    }
+    now->data = func;
 };
 
 static void eat(int token) {
@@ -197,10 +215,16 @@ VarDef * parse_var(FuncDef * env) {
     if (!top.typeManager.count(type)) {
         error("no such type");
     }
-    if (env->varManager.count(name)) {
+    if (env) {
+        if (env->varManager.count(name)) {
+            error("variable duplicated definition");
+        }
+        return env->varManager[name] = new VarDef(top.typeManager[type], name);
+    }
+    if (top.varManager.count(name)) {
         error("variable duplicated definition");
     }
-    return env->varManager[name] = new VarDef(top.typeManager[type], name);
+    return top.varManager[name] = new VarDef(top.typeManager[type], name);
 };
 
 FuncDef * parse_func() {
@@ -274,8 +298,6 @@ Top * parse_top() {
                 temp = parse_var(NULL);
             }
             top.defList.push_back(temp);
-            temp->dump();
-            printf("\n");
             break;
         default:
             error("token unexpected");
@@ -284,12 +306,12 @@ Top * parse_top() {
     return &top;
 };
 
-extern void code_gen();
+extern void code_gen(Top & top);
 
 void parse_init() {
     current = 0;
     top.typeManager.init();
     top.opManager.init();
     parse_top();
-    code_gen();
+    code_gen(top);
 };

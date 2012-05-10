@@ -18,17 +18,17 @@ void Top::dump() const {
 };
 
 void VarDef::dump() const {
-    printf("%s %s", type->name.c_str(), name.c_str());
+    printf("%s %s", type.name.c_str(), name.c_str());
 };
 
 void FuncDef::dump() const {
-    printf("%s %s(", type->name.c_str(), name.c_str());
+    printf("%s %s(", type.name.c_str(), name.c_str());
     if (arguments.size() > 0) {
         std::list<VarDef *>::const_iterator iter = arguments.begin();
-        printf("%s %s", (*iter)->type->name.c_str(), (*iter)->name.c_str());
+        printf("%s %s", (*iter)->type.name.c_str(), (*iter)->name.c_str());
         ++iter;
         for (; iter != arguments.end(); ++iter) {
-            printf(", %s %s", (*iter)->type->name.c_str(), (*iter)->name.c_str());
+            printf(", %s %s", (*iter)->type.name.c_str(), (*iter)->name.c_str());
         }
     }
     printf(") {\n");
@@ -68,7 +68,7 @@ void Expr::dump() const {
 };
 
 void ConstantNumNode::dump() const {
-    printf("%lld", value);
+    printf("%lld", num);
 };
 
 void VarNode::dump() const {
@@ -95,8 +95,8 @@ void Operator::dump() const {
 
 void Return::dump() const {
     printf("return");
-    if (value) {
+    if (retExpr) {
         printf(" ");
-        value->dump();
+        retExpr->dump();
     }
 };
