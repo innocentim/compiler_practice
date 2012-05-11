@@ -13,16 +13,16 @@
 extern Token tokens[];
 extern int token_n;
 static int current;
-static Top top;
+Top top;
 static OperatorManager & opManager = top.opManager;
 
-const Type Type::intType("int", llvm::Type::getInt64Ty(llvm::getGlobalContext()));
-const Operator Operator::opRoot("", 0, Operator::right_unary, true);
-const Operator Operator::opFactor("", 99, Operator::factor, true);
-const Operator Operator::opAssign("=", 10, Operator::binary, false);
-const Operator Operator::opAdd("+", 20, Operator::binary, true);
-const Operator Operator::opPos("+", 40, Operator::right_unary, true);
-const Operator Operator::opMul("*", 30, Operator::binary, true);
+const Type Type::Int("int", llvm::Type::getInt64Ty(llvm::getGlobalContext()));
+const Operator Operator::Root("", 0, Operator::right_unary, true);
+const Operator Operator::Factor("", 99, Operator::factor, true);
+const Operator Operator::Assign("=", 10, Operator::binary, false);
+const Operator Operator::Add("+", 20, Operator::binary, true);
+const Operator Operator::Pos("+", 40, Operator::right_unary, true);
+const Operator Operator::Mul("*", 30, Operator::binary, true);
 
 void TypeManager::regi(const char * s, const Type & type) {
     if (_map.count(s)) {
@@ -31,17 +31,30 @@ void TypeManager::regi(const char * s, const Type & type) {
     _map[s] = &type;
 };
 
-OperatorManager::OperatorManager() {
-};
-
 void OperatorManager::init() {
     memset(binOrLeftUnaryManager, 0, 256);
     memset(rightUnaryManager, 0, 256);
-    regi(equ, Operator::opAssign);
-    regi(plus, Operator::opAdd);
-    regi(plus, Operator::opPos);
-    regi(star, Operator::opMul);
+    regi(equ, Operator::Assign);
+    regi(plus, Operator::Add);
+    regi(plus, Operator::Pos);
+    regi(star, Operator::Mul);
 };
+
+void OperatorManager::Trie::insert(const std::list<const Type *> & types, CallBack callBack) {
+    std::list<const Type *>::const_iterator iter = types.begin();
+    Trie * now = this;
+    while (iter != types.end()) {
+        if (now->children.count(*iter) == 0){
+            now->children[*iter] = new Trie();
+        }
+        now = now->children[*iter];
+        ++iter;
+    }
+    if (now->callBack) {
+        error("duplicate operator overload");
+    }
+    now->callBack = callBack;
+}
 
 void OperatorManager::regi(int tok, const Operator & op) {
     if (leftAssoManager[op.prec]) {
@@ -70,20 +83,8 @@ void OperatorManager::regi(int tok, const Operator & op) {
     }
 };
 
-void OperatorManager::override(const Operator & op, const FuncDef * func) {
-    Trie * now = &(_map[&op]);
-    std::list<VarDef *>::const_iterator iter = func->arguments.begin();
-    while (iter != func->arguments.end()) {
-        if (now->next((*iter)->type) == 0){
-            now->next((*iter)->type) = new Trie();
-        }
-        now = now->next((*iter)->type);
-        ++iter;
-    }
-    if (now->data) {
-        error("duplicate operator override");
-    }
-    now->data = func;
+void OperatorManager::overload(const Operator & op, const std::list<const Type *> & types, CallBack callBack) {
+    _map[&op].insert(types, callBack);
 };
 
 static void eat(int token) {
@@ -159,17 +160,17 @@ FactorNode * parse_factor(FuncDef * env) {
 };
 
 Expr * parse_expr(FuncDef * env) {
-    std::list<Expr *> stack;
-    Expr _t(&Operator::opRoot);
+    std::list<OpNode *> stack;
+    OpNode _t(&Operator::Root);
     stack.push_back(&_t);
     bool filled = false;
     while (1) {
         int tok = tokens[current];
-        Expr * now = stack.back();
+        OpNode * now = stack.back();
         if (filled) { // binary or left-unary
             if (opManager.binOrLeftUnaryManager[tok]) {
                 int prec = opManager.binOrLeftUnaryManager[tok]->prec;
-                Expr * newNode = new Expr(opManager.binOrLeftUnaryManager[tok]);
+                OpNode * newNode = new OpNode(opManager.binOrLeftUnaryManager[tok]);
                 while (now->op->prec > prec || (now->op->prec == prec && opManager.leftAssoManager[prec])) {
                     stack.pop_back();
                     now = stack.back();
@@ -188,10 +189,12 @@ Expr * parse_expr(FuncDef * env) {
             }
         } else { // factor or right-unary
             if (tok == identifier || is_const(tok)) {
-                stack.push_back(now->right = parse_factor(env));
+                now->right = parse_factor(env);
                 filled = true;
             } else if (opManager.rightUnaryManager[tok]) {
-                stack.push_back(now->right = new Expr(opManager.rightUnaryManager[tok]));
+                OpNode * temp = new OpNode(opManager.rightUnaryManager[tok]);
+                stack.push_back(temp);
+                now->right = temp;
                 current++;
                 filled = false;
             } else {
@@ -306,12 +309,12 @@ Top * parse_top() {
     return &top;
 };
 
-extern void code_gen(Top & top);
+extern void code_gen();
 
 void parse_init() {
     current = 0;
     top.typeManager.init();
     top.opManager.init();
     parse_top();
-    code_gen(top);
+    code_gen();
 };

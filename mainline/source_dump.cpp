@@ -53,7 +53,7 @@ void FuncDef::dump() const {
     printf("}\n");
 };
 
-void Expr::dump() const {
+void OpNode::dump() const {
     printf("(");
     if (left) {
         left->dump();

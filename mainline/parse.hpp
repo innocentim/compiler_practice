@@ -21,7 +21,7 @@ class Expr;
 class Type {
 public:
     llvm::Type * value;
-    static const Type intType;
+    static const Type Int;
     const Identifier name;
     Type(const Identifier & name, llvm::Type * value) : value(value), name(name) {};
 };
@@ -31,7 +31,7 @@ class TypeManager {
 public:
     TypeManager() {};
     void init() {
-        regi("int", Type::intType);
+        regi("int", Type::Int);
     };
 
     void regi(const char * s, const Type & type);
@@ -46,12 +46,12 @@ public:
 class Operator {
     std::string name;
 public:
-    static const Operator opRoot;
-    static const Operator opFactor;
-    static const Operator opAssign;
-    static const Operator opAdd;
-    static const Operator opPos;
-    static const Operator opMul;
+    static const Operator Root;
+    static const Operator Factor;
+    static const Operator Assign;
+    static const Operator Add;
+    static const Operator Pos;
+    static const Operator Mul;
     enum OperatorType{
         binary,
         left_unary,
@@ -67,29 +67,39 @@ public:
 };
 
 class OperatorManager {
+public:
+    typedef llvm::Instruction * (*CallBack)(const std::list<const llvm::Instruction *> & args);
     class Trie {
         std::map<const Type *, Trie *> children;
     public:
-        const FuncDef * data;
-        Trie() : data(NULL) {};
-        Trie *& next(const Type & type) {
-            if (!children.count(&type)) {
-                children[&type] = 0;
+        CallBack callBack;
+
+        Trie() : callBack(NULL) {};
+        void insert(const std::list<const Type *> & types, CallBack callBack);
+        Trie * next(const Type & type) {
+            if (children.count(&type)) {
+                return children[&type];
             }
-            return children[&type];
-        }
+            return NULL;
+        };
     };
-public:
+private:
     std::map<const Operator *, Trie> _map;
+public:
     const Operator * binOrLeftUnaryManager[256];
     const Operator * rightUnaryManager[256];
     bool leftAssoManager[100];
 
-    OperatorManager();
+    OperatorManager() {};
     void init();
-
     void regi(int tok, const Operator & op);
-    void override(const Operator & op, const FuncDef * func);
+    void overload(const Operator & op, const std::list<const Type *> & types, CallBack callBack);
+    Trie * operator[](const Operator & op) {
+        if (_map.count(&op)) {
+            return &_map[&op];
+        }
+        return NULL;
+    };
 };
 
 class Top {
@@ -122,68 +132,56 @@ public:
 };
 
 class FuncDef : public Definition {
-    //void (*_callBack)(const FuncDef * func);
 public:
     llvm::Function * value;
     std::list<VarDef *> arguments;
     std::map<std::string, VarDef *> varManager;
     std::list<Statement *> stmtList;
 
-    FuncDef(const Type & type, const Identifier & name/*, void (*_callBack)(const FuncDef * func) = NULL*/) : Definition(type, name)/*, _callBack(_callBack)*/ {};
+    FuncDef(const Type & type, const Identifier & name) : Definition(type, name) {};
     virtual void dump() const;
-    virtual llvm::Value * code_gen(const FuncDef * env);
+    virtual llvm::Function * code_gen(const FuncDef * env);
 };
 
 class Statement {
 public:
-    Type * type;
-
-    Statement() : type(NULL) {};
+    Statement() {};
     virtual void dump() const = 0;
-    virtual llvm::Value * code_gen(const FuncDef * env) = 0;
-};
-
-class Return : public Statement {
-public:
-    const Expr * retExpr;
-    
-    Return(const Expr * retExpr) : retExpr(retExpr) {};
-    virtual void dump() const;
-    virtual llvm::Value * code_gen(const FuncDef * env);
+    virtual llvm::Instruction * code_gen(const FuncDef * env) = 0;
 };
 
 class Expr : public Statement {
 public:
-    const Operator * op;
+    Type * type;
     Expr * left;
     Expr * right;
 
-    Expr(const Operator * op) : Statement(), op(op), left(NULL), right(NULL) {};
-    virtual void dump() const;
-    virtual llvm::Value * code_gen(const FuncDef * env);
+    Expr() : Statement(), type(NULL), left(NULL), right(NULL) {};
+    virtual void dump() const = 0;
+    virtual llvm::Instruction * code_gen(const FuncDef * env) = 0;
 };
 
 class FactorNode : public Expr {
 public:
-    FactorNode() : Expr(&Operator::opFactor) {};
+    FactorNode() {};
     virtual void dump() const = 0;
-    virtual llvm::Value * code_gen(const FuncDef * env) = 0;
+    virtual llvm::Instruction * code_gen(const FuncDef * env) = 0;
 };
 
 class ConstantNode : public FactorNode {
 public:
     ConstantNode() {};
     virtual void dump() const = 0;
-    virtual llvm::Value * code_gen(const FuncDef * env) = 0;
+    virtual llvm::Instruction * code_gen(const FuncDef * env) = 0;
 };
 
 class ConstantNumNode : public ConstantNode {
 public:
     long long num;
 
-    ConstantNumNode(long long num) : ConstantNode(), num(num) {};
+    ConstantNumNode(long long num) : num(num) {};
     virtual void dump() const;
-    virtual llvm::Value * code_gen(const FuncDef * env);
+    virtual llvm::Instruction * code_gen(const FuncDef * env);
 };
 
 class VarNode : public FactorNode {
@@ -192,7 +190,7 @@ public:
 
     VarNode(const VarDef * var) : var(var) {};
     virtual void dump() const;
-    virtual llvm::Value * code_gen(const FuncDef * env);
+    virtual llvm::Instruction * code_gen(const FuncDef * env);
 };
 
 class CallNode : public FactorNode {
@@ -202,7 +200,24 @@ public:
 
     CallNode(FuncDef * func) : func(func) {};
     virtual void dump() const;
-    virtual llvm::Value * code_gen(const FuncDef * env);
+    virtual llvm::Instruction * code_gen(const FuncDef * env);
+};
+
+class OpNode : public CallNode {
+public:
+    const Operator * op;
+    OpNode(const Operator * op) : CallNode(NULL), op(op) {};
+    virtual void dump() const;
+    virtual llvm::Instruction * code_gen(const FuncDef * env);
+};
+
+class Return : public Statement {
+public:
+    const Expr * retExpr;
+    
+    Return(const Expr * retExpr) : retExpr(retExpr) {};
+    virtual void dump() const;
+    virtual llvm::Instruction * code_gen(const FuncDef * env);
 };
 
 #endif
