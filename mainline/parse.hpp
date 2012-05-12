@@ -46,8 +46,6 @@ public:
 class Operator {
     std::string name;
 public:
-    static const Operator Root;
-    static const Operator Factor;
     static const Operator Assign;
     static const Operator Add;
     static const Operator Pos;

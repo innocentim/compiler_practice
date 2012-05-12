@@ -17,8 +17,6 @@ Top top;
 static OperatorManager & opManager = top.opManager;
 
 const Type Type::Int("int", llvm::Type::getInt64Ty(llvm::getGlobalContext()));
-const Operator Operator::Root("", 0, Operator::right_unary, true);
-const Operator Operator::Factor("", 99, Operator::factor, true);
 const Operator Operator::Assign("=", 10, Operator::binary, false);
 const Operator Operator::Add("+", 20, Operator::binary, true);
 const Operator Operator::Pos("+", 40, Operator::right_unary, true);
@@ -160,8 +158,9 @@ FactorNode * parse_factor(FuncDef * env) {
 };
 
 Expr * parse_expr(FuncDef * env) {
+    static const Operator root("", 0, Operator::right_unary, true);
     std::list<OpNode *> stack;
-    OpNode _t(&Operator::Root);
+    OpNode _t(&root);
     stack.push_back(&_t);
     bool filled = false;
     while (1) {
