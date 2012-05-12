@@ -113,7 +113,11 @@ Value * Return::code_gen(const FuncDef * env) {
 Value * pos_call_back(const FuncDef *env, const std::list<Value *> & args, const ::Type *& type) {
     type = &::Type::Int;
     std::list<Value *>::const_iterator iter = args.begin();
-    return *iter;
+    Value * right = *iter;
+    if (is_var(right)) {
+        right = new LoadInst(right, "Load", last_block(env));
+    }
+    return right;
 };
 
 Value * assign_call_back(const FuncDef *env, const std::list<Value *> & args, const ::Type *& type) {
@@ -136,6 +140,12 @@ Value * add_call_back(const FuncDef *env, const std::list<Value *> & args, const
     std::list<Value *>::const_iterator iter = args.begin();
     Value * left = *iter;
     Value * right = *++iter;
+    if (is_var(left)) {
+        left = new LoadInst(left, "Load", last_block(env));
+    }
+    if (is_var(right)) {
+        right = new LoadInst(right, "Load", last_block(env));
+    }
     return BinaryOperator::Create(Instruction::Add, left, right, "Add", last_block(env));
 };
 
@@ -144,6 +154,12 @@ Value * mul_call_back(const FuncDef *env, const std::list<Value *> & args, const
     std::list<Value *>::const_iterator iter = args.begin();
     Value * left = *iter;
     Value * right = *++iter;
+    if (is_var(left)) {
+        left = new LoadInst(left, "Load", last_block(env));
+    }
+    if (is_var(right)) {
+        right = new LoadInst(right, "Load", last_block(env));
+    }
     return BinaryOperator::Create(Instruction::Mul, left, right, "Mul", last_block(env));
 };
 

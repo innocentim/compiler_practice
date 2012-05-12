@@ -6,7 +6,7 @@ int add(int a, int delta) {
     return delta
 }
 
-int main() {
+int work() {
     int d
     a = b = c = d = 7* 3 + 3 * 5
     return add(a, 3)

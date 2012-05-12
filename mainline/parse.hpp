@@ -153,10 +153,8 @@ public:
 class Expr : public Statement {
 public:
     const Type * type;
-    Expr * left;
-    Expr * right;
 
-    Expr() : Statement(), type(NULL), left(NULL), right(NULL) {};
+    Expr() : Statement(), type(NULL) {};
     virtual void dump() const = 0;
     virtual llvm::Value * code_gen(const FuncDef * env) = 0;
 };
@@ -203,10 +201,13 @@ public:
     virtual llvm::Value * code_gen(const FuncDef * env);
 };
 
-class OpNode : public CallNode {
+class OpNode : public Expr {
 public:
     const Operator * op;
-    OpNode(const Operator * op) : CallNode(NULL), op(op) {};
+    Expr * left;
+    Expr * right;
+
+    OpNode(const Operator * op) : op(op), left(NULL), right(NULL) {};
     virtual void dump() const;
     virtual llvm::Value * code_gen(const FuncDef * env);
 };
