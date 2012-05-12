@@ -40,7 +40,7 @@ void OperatorManager::init() {
     regi(star, Operator::Mul);
 };
 
-void OperatorManager::Trie::insert(const std::list<const Type *> & types, CallBack callBack) {
+void OperatorManager::Trie::insert(const std::list<const Type *> & types, Callback callback) {
     std::list<const Type *>::const_iterator iter = types.begin();
     Trie * now = this;
     while (iter != types.end()) {
@@ -50,10 +50,10 @@ void OperatorManager::Trie::insert(const std::list<const Type *> & types, CallBa
         now = now->children[*iter];
         ++iter;
     }
-    if (now->callBack) {
+    if (now->callback) {
         error("duplicate operator overload");
     }
-    now->callBack = callBack;
+    now->callback = callback;
 }
 
 void OperatorManager::regi(int tok, const Operator & op) {
@@ -83,8 +83,8 @@ void OperatorManager::regi(int tok, const Operator & op) {
     }
 };
 
-void OperatorManager::overload(const Operator & op, const std::list<const Type *> & types, CallBack callBack) {
-    _map[&op].insert(types, callBack);
+void OperatorManager::overload(const Operator & op, const std::list<const Type *> & types, Callback callback) {
+    _map[&op].insert(types, callback);
 };
 
 static void eat(int token) {
@@ -265,6 +265,7 @@ FuncDef * parse_func() {
     }
     eat(rparen);
     eat(lbrace);
+    VarDef * temp;
     while (1) {
         switch (tokens[current]) {
         case kwd_return:
@@ -276,7 +277,9 @@ FuncDef * parse_func() {
                 ret->stmtList.push_back(parse_expr(ret));
                 break;
             }
-            top.defList.push_back(parse_var(ret));
+            temp = parse_var(ret);
+            ret->localVar.push_back(temp);
+            ret->varManager[temp->name] = temp;
             break;
         case rbrace:
             goto out;

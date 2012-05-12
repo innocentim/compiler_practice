@@ -1,14 +1,13 @@
 int a
 int b
 int c
-int d
 
 int add(int a, int delta) {
-    return a + delta
-    return + 3
+    return delta
 }
 
 int main() {
+    int d
     a = b = c = d = 7* 3 + 3 * 5
     return add(a, 3)
 }
