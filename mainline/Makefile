@@ -1,17 +1,23 @@
-all :  compiler
+TARGET = compiler
+OBJS = code_gen.o lex.o parse.o source_dump.o
+CPP = clang++
+COMPILE_FLAGS = -Wall -c `llvm-config --cppflags`
+LINK_FLAGS = -Wall `llvm-config --ldflags --libs core`
 
-compiler : code_gen.o lex.o parse.o source_dump.o
-	clang++ -Wall -o compiler *.o `llvm-config --ldflags --libs core`
+all : $(TARGET)
+
+compiler : $(OBJS)
+	$(CPP) -o $(TARGET) $^ $(LINK_FLAGS)
 code_gen.o : code_gen.cpp parse.hpp
-	clang++ -Wall -c $< `llvm-config --cppflags`
+	$(CPP) $< $(COMPILE_FLAGS)
 lex.o : lex.cpp lex.hpp
-	clang++ -Wall -c $< `llvm-config --cppflags`
+	$(CPP) $< $(COMPILE_FLAGS)
 parse.o : parse.cpp parse.hpp lex.hpp
-	clang++ -Wall -c $< `llvm-config --cppflags`
+	$(CPP) $< $(COMPILE_FLAGS)
 source_dump.o : source_dump.cpp parse.hpp
-	clang++ -Wall -c $< `llvm-config --cppflags`
+	$(CPP) $< $(COMPILE_FLAGS)
 
 clean :
-	rm -rf code_gen.o lex.o parse.o source_dump.o compiler
+	rm -rf $(OBJS) $(TARGET)
 
 .PHONY : all clean
