@@ -21,6 +21,7 @@ const Operator Operator::Assign("=", 10, Operator::binary, false);
 const Operator Operator::Add("+", 20, Operator::binary, true);
 const Operator Operator::Pos("+", 40, Operator::right_unary, true);
 const Operator Operator::Mul("*", 30, Operator::binary, true);
+FuncDef FuncDef::externPutchar(Type::Int, "putchar", true);
 
 void TypeManager::regi(const char * s, const Type & type) {
     if (_map.count(s)) {
@@ -190,6 +191,11 @@ Expr * parse_expr(FuncDef * env) {
             if (tok == identifier || is_const(tok)) {
                 now->right = parse_factor(env);
                 filled = true;
+            } else if (tok == lparen) {
+                eat(lparen);
+                now->right = parse_expr(env);
+                filled = true;
+                eat(rparen);
             } else if (opManager.rightUnaryManager[tok]) {
                 OpNode * temp = new OpNode(opManager.rightUnaryManager[tok]);
                 stack.push_back(temp);
@@ -277,7 +283,6 @@ FuncDef * parse_func() {
                 break;
             }
             temp = parse_var(ret);
-            ret->localVar.push_back(temp);
             ret->varManager[temp->name] = temp;
             break;
         case rbrace:
@@ -302,7 +307,6 @@ Top * parse_top() {
             } else {
                 temp = parse_var(NULL);
             }
-            top.defList.push_back(temp);
             break;
         default:
             error("token unexpected");
@@ -317,6 +321,8 @@ void parse_init() {
     current = 0;
     top.typeManager.init();
     top.opManager.init();
+    FuncDef::externPutchar.arguments.push_back(new VarDef(Type::Int, "ch"));
+    top.funcManager["putchar"] = &FuncDef::externPutchar;
     parse_top();
     code_gen();
 };

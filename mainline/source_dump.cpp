@@ -10,10 +10,19 @@ void printIden() {
 }
 
 void Top::dump() const {
-    std::list<Definition *>::const_iterator iter;
-    for (iter = defList.begin(); iter != defList.end(); ++iter) {
-        (*iter)->dump();
-        printf("\n");
+    {
+        std::map<Identifier, VarDef *>::const_iterator iter;
+        for (iter = varManager.begin(); iter != varManager.end(); ++iter) {
+            iter->second->dump();
+            printf("\n");
+        }
+    }
+    {
+        std::map<Identifier, FuncDef *>::const_iterator iter;
+        for (iter = funcManager.begin(); iter != funcManager.end(); ++iter) {
+            iter->second->dump();
+            printf("\n");
+        }
     }
 };
 

@@ -102,11 +102,10 @@ public:
 
 class Top {
 public:
-    std::list<Definition *> defList;
     TypeManager typeManager;
     OperatorManager opManager;
-    std::map<std::string, FuncDef *> funcManager;
-    std::map<std::string, VarDef *> varManager;
+    std::map<Identifier, FuncDef *> funcManager;
+    std::map<Identifier, VarDef *> varManager;
 
     virtual void dump() const;
     virtual llvm::Module * code_gen();
@@ -125,20 +124,21 @@ public:
 class VarDef : public Definition {
 public:
     llvm::Value * value;
-    VarDef(const Type & type, const Identifier & name) : Definition(type, name) {};
+    VarDef(const Type & type, const Identifier & name) : Definition(type, name), value(NULL) {};
     virtual void dump() const;
     virtual llvm::Value * code_gen(const FuncDef * env);
 };
 
 class FuncDef : public Definition {
 public:
+    static FuncDef externPutchar;
     llvm::Function * value;
     std::list<VarDef *> arguments;
-    std::list<VarDef *> localVar;
-    std::map<std::string, VarDef *> varManager;
+    std::map<Identifier, VarDef *> varManager;
     std::list<Statement *> stmtList;
+    bool declare;
 
-    FuncDef(const Type & type, const Identifier & name) : Definition(type, name) {};
+    FuncDef(const Type & type, const Identifier & name, bool declare = false) : Definition(type, name), value(NULL), declare(declare) {};
     virtual void dump() const;
     virtual llvm::Function * code_gen(const FuncDef * env);
 };
@@ -154,7 +154,7 @@ class Expr : public Statement {
 public:
     const Type * type;
 
-    Expr() : Statement(), type(NULL) {};
+    Expr() : type(NULL) {};
     virtual void dump() const = 0;
     virtual llvm::Value * code_gen(const FuncDef * env) = 0;
 };
@@ -184,9 +184,9 @@ public:
 
 class VarNode : public FactorNode {
 public:
-    const VarDef * var;
+    VarDef * var;
 
-    VarNode(const VarDef * var) : var(var) {};
+    VarNode(VarDef * var) : var(var) {};
     virtual void dump() const;
     virtual llvm::Value * code_gen(const FuncDef * env);
 };

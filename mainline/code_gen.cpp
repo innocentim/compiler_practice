@@ -22,9 +22,19 @@ BasicBlock * last_block(const FuncDef * func) {
 };
 
 Module * Top::code_gen() {
-    std::list<Definition *>::const_iterator it;
-    for (it = defList.begin(); it != defList.end(); ++it){
-        (*it)->code_gen(NULL);
+    {
+        std::map<Identifier, VarDef *>::const_iterator iter;
+        for (iter = varManager.begin(); iter != varManager.end(); ++iter) {
+            iter->second->code_gen(NULL);
+        }
+    }
+    {
+        std::map<Identifier, FuncDef *>::const_iterator iter;
+        for (iter = funcManager.begin(); iter != funcManager.end(); ++iter) {
+            if (!iter->second->value) {
+                iter->second->code_gen(NULL);
+            }
+        }
     }
     return &module;
 };
@@ -41,6 +51,18 @@ Value * VarDef::code_gen(const FuncDef * env) {
 };
 
 Function * FuncDef::code_gen(const FuncDef * env) {
+    if (declare) {
+        std::vector<llvm::Type *> temp;
+        std::list<VarDef *>::const_iterator argIter;
+        for (argIter = arguments.begin(); argIter != arguments.end(); ++argIter) {
+            temp.push_back((*argIter)->type.value);
+            //Argument * temp = new Argument((*argIter)->type.value);
+            //value->getArgumentList().push_back(temp);
+            //(*argIter)->value = temp;
+        }
+        value = Function::Create(FunctionType::get(type.value, temp, false), Function::ExternalLinkage, name, &module);
+        return value;
+    }
     value = Function::Create(FunctionType::get(type.value, /*?*/false), Function::ExternalLinkage, name, &module);
     BasicBlock::Create(getGlobalContext(), "", value);
     std::list<VarDef *>::const_iterator argIter;
@@ -51,9 +73,10 @@ Function * FuncDef::code_gen(const FuncDef * env) {
         new StoreInst(temp2, temp, last_block(this));
         (*argIter)->value = temp;
     }
-    std::list<VarDef *>::const_iterator localVarIter;
-    for (localVarIter = localVar.begin(); localVarIter != localVar.end(); ++localVarIter) {
-        (*localVarIter)->value = new AllocaInst((*localVarIter)->type.value, (*localVarIter)->name, last_block(this));
+    std::map<Identifier, VarDef *>::const_iterator localIter;
+    for (localIter = varManager.begin(); localIter != varManager.end(); ++localIter) {
+        VarDef * temp = localIter->second;
+        temp->value = new AllocaInst(temp->type.value, temp->name, last_block(this));
     }
     std::list<Statement *>::const_iterator stmtIter;
     for (stmtIter = stmtList.begin(); stmtIter != stmtList.end(); ++stmtIter) {
@@ -98,6 +121,9 @@ Value * CallNode::code_gen(const FuncDef * env) {
             val = new LoadInst(val, "LoadForCall", last_block(env));
         }
         temp.push_back(val);
+    }
+    if (!func->value) {
+        func->code_gen(NULL);
     }
     return CallInst::Create(func->value, temp, func->name, last_block(env));
 };
@@ -146,7 +172,7 @@ Value * add_call_back(const FuncDef *env, const std::list<Value *> & args, const
     if (is_var(right)) {
         right = new LoadInst(right, "Load", last_block(env));
     }
-    return BinaryOperator::Create(Instruction::Add, left, right, "Add", last_block(env));
+    return BinaryOperator::Create(Instruction::Add, left, right, "", last_block(env));
 };
 
 Value * mul_call_back(const FuncDef *env, const std::list<Value *> & args, const ::Type *& type) {
@@ -160,7 +186,7 @@ Value * mul_call_back(const FuncDef *env, const std::list<Value *> & args, const
     if (is_var(right)) {
         right = new LoadInst(right, "Load", last_block(env));
     }
-    return BinaryOperator::Create(Instruction::Mul, left, right, "Mul", last_block(env));
+    return BinaryOperator::Create(Instruction::Mul, left, right, "", last_block(env));
 };
 
 void code_gen() {
@@ -173,5 +199,10 @@ void code_gen() {
     top.opManager.overload(Operator::Add, types, add_call_back);
     top.opManager.overload(Operator::Mul, types, mul_call_back);
 
+    FILE * back = freopen("out.ll", "w", stderr);
     top.code_gen()->dump();
+    stderr = back;
+    system("llc -o out.s out.ll");
+    system("as -o out.o out.s");
+    system("ld -o a.out -dynamic-linker /lib64/ld-linux-x86-64.so.2 /usr/lib/x86_64-linux-gnu/crt1.o /usr/lib/gcc/x86_64-linux-gnu/4.6/crtbegin.o /usr/lib/x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/4.6/crtend.o /usr/lib/x86_64-linux-gnu/crtn.o out.o -lc");
 };

@@ -1,9 +1,8 @@
+#include "lex.hpp"
 #include <string>
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
-#include <iostream>
-#include "lex.hpp"
 
 class Trie {
     Token data;
@@ -81,8 +80,13 @@ Token lex() {
             return Token(kwd_return);
         }
         return Token(identifier, &idenStr);
-    } else if (isdigit(last)) { // constant_number := [0-9]+
+    } else if (isdigit(last) || last == '-') { // constant_number := [0-9]+
         long long & numInt = *(new long long);
+        int sign = 1;
+        if (last == '-') {
+            sign = -1;
+            last = getchar();
+        }
         numInt = last - '0';
         while (isdigit(last = getchar())) {
             numInt = numInt * 10 + last - '0';
