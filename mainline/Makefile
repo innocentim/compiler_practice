@@ -6,8 +6,8 @@ LINK_FLAGS = -Wall `llvm-config --ldflags --libs core`
 
 all : $(TARGET)
 
-compiler : $(OBJS)
-	$(CPP) -o $(TARGET) $^ $(LINK_FLAGS)
+$(TARGET) : $(OBJS)
+	$(CPP) -o $@ $^ $(LINK_FLAGS)
 code_gen.o : code_gen.cpp parse.hpp
 	$(CPP) $< $(COMPILE_FLAGS)
 lex.o : lex.cpp lex.hpp
