@@ -86,9 +86,11 @@ private:
 public:
     const Operator * binOrLeftUnaryManager[256];
     const Operator * rightUnaryManager[256];
-    bool leftAssoManager[100];
+    int leftAssoManager[100];
 
-    OperatorManager() {};
+    OperatorManager() {
+        memset(leftAssoManager, -1, sizeof(leftAssoManager));
+    };
     void init();
     void regi(int tok, const Operator & op);
     void overload(const Operator & op, const std::list<const Type *> & types, Callback callback);

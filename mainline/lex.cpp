@@ -91,6 +91,7 @@ Token lex() {
         while (isdigit(last = getchar())) {
             numInt = numInt * 10 + last - '0';
         }
+        numInt = sign * numInt;
         return Token(constant_int, &numInt);
     } else if (last == EOF) {
         return Token(eof);

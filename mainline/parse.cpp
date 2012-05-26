@@ -31,8 +31,8 @@ void TypeManager::regi(const char * s, const Type & type) {
 };
 
 void OperatorManager::init() {
-    memset(binOrLeftUnaryManager, 0, 256);
-    memset(rightUnaryManager, 0, 256);
+    memset(binOrLeftUnaryManager, 0, sizeof(binOrLeftUnaryManager));
+    memset(rightUnaryManager, 0, sizeof(rightUnaryManager));
     regi(equ, Operator::Assign);
     regi(plus, Operator::Add);
     regi(plus, Operator::Pos);
@@ -56,7 +56,7 @@ void OperatorManager::Trie::insert(const std::list<const Type *> & types, Callba
 }
 
 void OperatorManager::regi(int tok, const Operator & op) {
-    if (leftAssoManager[op.prec]) {
+    if (leftAssoManager[op.prec] != -1) {
         if (leftAssoManager[op.prec] != op.leftAsso) {
             error("inconsistent left associate");
         }
@@ -109,11 +109,12 @@ CallNode * parse_call_node(FuncDef * env) {
     if (!top.funcManager.count(*((std::string *)tokens[current].data))) {
         error("function not find");
     }
-    ret = new CallNode(top.funcManager[*((std::string *)tokens[current].data)]);
+    FuncDef * func = top.funcManager[*((std::string *)tokens[current].data)];
+    ret = new CallNode(func);
     eat(identifier);
     eat(lparen);
-    std::list<VarDef *>::const_iterator iter, e;
-    for (iter = ret->func->arguments.begin(), e = ret->func->arguments.end(); iter != e; ++iter) {
+    int n = func->arguments.size();
+    while (n--) {
         Expr * temp = parse_expr(env);
         ret->arguments.push_back(temp);
         if (tokens[current] == comma) {
@@ -123,6 +124,9 @@ CallNode * parse_call_node(FuncDef * env) {
         }
     }
     eat(rparen);
+    if (n != -1) {
+        error("number of arguments unexpected");
+    }
     return ret;
 };
 
@@ -185,6 +189,7 @@ Expr * parse_expr(FuncDef * env) {
                     filled = true;
                 }
             } else {
+                // paren check
                 return stack.front()->right;
             }
         } else { // factor or right-unary
@@ -194,8 +199,8 @@ Expr * parse_expr(FuncDef * env) {
             } else if (tok == lparen) {
                 eat(lparen);
                 now->right = parse_expr(env);
-                filled = true;
                 eat(rparen);
+                filled = true;
             } else if (opManager.rightUnaryManager[tok]) {
                 OpNode * temp = new OpNode(opManager.rightUnaryManager[tok]);
                 stack.push_back(temp);
@@ -287,6 +292,9 @@ FuncDef * parse_func() {
             break;
         case rbrace:
             goto out;
+        case rparen:
+            error("rparen unexpected");
+            break;
         }
     }
 out:
@@ -301,11 +309,10 @@ Top * parse_top() {
             if (tokens[current + 1] != identifier) {
                 error("definition expected");
             }
-            Definition * temp;
             if (tokens[current + 2] == lparen) {
-                temp = parse_func();
+                parse_func();
             } else {
-                temp = parse_var(NULL);
+                parse_var(NULL);
             }
             break;
         default:

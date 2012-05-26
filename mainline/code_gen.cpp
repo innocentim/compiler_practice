@@ -41,7 +41,9 @@ Module * Top::code_gen() {
 
 Value * VarDef::code_gen(const FuncDef * env) {
     if (env) {
-        value = new AllocaInst(type.value, name, last_block(env));
+        if (!value) {
+            value = new AllocaInst(type.value, name, last_block(env));
+        }
     } else {
         GlobalVariable * temp;
         module.getGlobalList().push_back(temp = new GlobalVariable(type.value, false, GlobalVariable::CommonLinkage, Constant::getNullValue(type.value), name));
@@ -65,18 +67,16 @@ Function * FuncDef::code_gen(const FuncDef * env) {
     }
     value = Function::Create(FunctionType::get(type.value, /*?*/false), Function::ExternalLinkage, name, &module);
     BasicBlock::Create(getGlobalContext(), "", value);
-    std::list<VarDef *>::const_iterator argIter;
-    for (argIter = arguments.begin(); argIter != arguments.end(); ++argIter) {
-        Value * temp = new AllocaInst((*argIter)->type.value, (*argIter)->name, last_block(this));
-        Argument * temp2 = new Argument((*argIter)->type.value);
-        value->getArgumentList().push_back(temp2);
-        new StoreInst(temp2, temp, last_block(this));
-        (*argIter)->value = temp;
-    }
     std::map<Identifier, VarDef *>::const_iterator localIter;
     for (localIter = varManager.begin(); localIter != varManager.end(); ++localIter) {
         VarDef * temp = localIter->second;
-        temp->value = new AllocaInst(temp->type.value, temp->name, last_block(this));
+        temp->code_gen(this);
+    }
+    std::list<VarDef *>::const_iterator argIter;
+    for (argIter = arguments.begin(); argIter != arguments.end(); ++argIter) {
+        Argument * temp2 = new Argument((*argIter)->type.value);
+        value->getArgumentList().push_back(temp2);
+        new StoreInst(temp2, (*argIter)->code_gen(this), last_block(this));
     }
     std::list<Statement *>::const_iterator stmtIter;
     for (stmtIter = stmtList.begin(); stmtIter != stmtList.end(); ++stmtIter) {
@@ -115,8 +115,12 @@ Value * CallNode::code_gen(const FuncDef * env) {
     type = &func->type;
     std::vector<Value *> temp;
     std::list<Expr *>::const_iterator iter;
-    for (iter = arguments.begin(); iter != arguments.end(); ++iter) {
+    std::list<VarDef *>::const_iterator defIter;
+    for (iter = arguments.begin(), defIter = func->arguments.begin(); iter != arguments.end(); ++iter, ++defIter) {
         Value * val = (*iter)->code_gen(env);
+        if ((*iter)->type != &(*defIter)->type) {
+            error("type unexpected");
+        }
         if (is_var(val)) {
             val = new LoadInst(val, "LoadForCall", last_block(env));
         }
@@ -199,7 +203,8 @@ void code_gen() {
     top.opManager.overload(Operator::Add, types, add_call_back);
     top.opManager.overload(Operator::Mul, types, mul_call_back);
 
-    FILE * back = freopen("out.ll", "w", stderr);
+    FILE * back = stderr;
+    freopen("out.ll", "w", stderr);
     top.code_gen()->dump();
     stderr = back;
     system("llc -o out.s out.ll");

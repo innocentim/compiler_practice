@@ -2,13 +2,14 @@ int a
 int b
 int c
 
-int add(int a, int delta) {
-    return delta
+int add(int l, int delta) {
+    return l + delta
 }
 
 int main() {
     int d
-    a = b = c = d = 7* 3 + 3 * 5 + 13
+    a = b = c = d = 7* 3 + 3 * 5 + add(5)
     putchar(a)
+    putchar(10)
     return 0
 }

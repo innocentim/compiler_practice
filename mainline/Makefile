@@ -1,6 +1,6 @@
 TARGET = compiler
 OBJS = code_gen.o lex.o parse.o source_dump.o
-CPP = clang++
+CPP = g++
 COMPILE_FLAGS = -Wall -c `llvm-config --cppflags`
 LINK_FLAGS = -Wall `llvm-config --ldflags --libs core`
 
