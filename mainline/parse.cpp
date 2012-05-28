@@ -124,7 +124,7 @@ CallNode * parse_call_node(FuncDef * env) {
         }
     }
     eat(rparen);
-    if (n != -1) {
+    if (n != 0) {
         error("number of arguments unexpected");
     }
     return ret;

@@ -8,7 +8,7 @@ int add(int l, int delta) {
 
 int main() {
     int d
-    a = b = c = d = 7* 3 + 3 * 5 + add(5)
+    a = b = c = d = 7* 3 + 3 * 5 + add(5, 3)
     putchar(a)
     putchar(10)
     return 0
