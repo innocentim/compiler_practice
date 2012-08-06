@@ -1,15 +1,19 @@
-int a
-int b
-int c
-
-int add(int l, int delta) {
-    return l + delta
+int printNum(int num) {
+	return putchar(num + 48)
 }
 
+int add(int a, int b) {
+	return a + b
+}
+
+int a
+
 int main() {
-    int d
-    a = b = c = d = 7* 3 + 3 * 5 + add(5, 3)
-    putchar(a)
+	a = 2*add(
+	1, 2
+	)
+	+1
+	printNum(a)
     putchar(10)
     return 0
 }

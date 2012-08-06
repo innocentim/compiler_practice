@@ -7,12 +7,12 @@
 class Trie {
     Token data;
     Trie * children[256]; 
-    void _print() {
+    void printImpl() {
         printf("%lu [label=\"%d\"]\n", (unsigned long)this, (int)data);
         for (int i = 0; i < 256; i++) {
             if (children[i]) {
                 printf("%lu -> %lu\n [label=\"%c\"]", (unsigned long)this, (unsigned long)children[i], i);
-                children[i]->_print();
+                children[i]->printImpl();
             }
         }
     };
@@ -37,7 +37,7 @@ public:
 
     void print() {
         printf("digraph a {\n");
-        _print();
+        printImpl();
         printf("}\n");
     };
 
@@ -45,14 +45,14 @@ public:
         return children[(unsigned char)last];
     };
 
-    Token get_data() {
+    Token getData() {
         return data;
     };
 };
 
 static Trie puncMap;
 Token tokens[1024];
-int token_n = 0;
+int tokenN = 0;
 
 inline
 bool isalpha(char ch) {
@@ -77,9 +77,9 @@ Token lex() {
         }
         if (idenStr == "return") {
             delete &idenStr;
-            return Token(kwd_return);
+            return Token(KWD_RETURN);
         }
-        return Token(identifier, &idenStr);
+        return Token(IDENTIFIER, &idenStr);
     } else if (isdigit(last) || last == '-') { // constant_number := [0-9]+
         long long & numInt = *(new long long);
         int sign = 1;
@@ -92,9 +92,9 @@ Token lex() {
             numInt = numInt * 10 + last - '0';
         }
         numInt = sign * numInt;
-        return Token(constant_int, &numInt);
+        return Token(CONSTANT_INT, &numInt);
     } else if (last == EOF) {
-        return Token(eof);
+        return Token(_EOF);
     }
     Trie * temp = &puncMap;
     Trie * lastTrie;
@@ -106,29 +106,29 @@ Token lex() {
         }
         last = getchar();
     }
-    if (lastTrie->get_data() == slashslash) {
+    if (lastTrie->getData() == SLASHSLASH) {
         while (last != '\n') {
             last = getchar();
         }
         last = getchar();
         return lex();
     }
-    return Token(lastTrie->get_data());
+    return Token(lastTrie->getData());
 };
 
 void init() {
-    puncMap.insert("(", lparen);
-    puncMap.insert(")", rparen);
-    puncMap.insert("{", lbrace);
-    puncMap.insert("}", rbrace);
-    puncMap.insert("=", equ);
-    puncMap.insert("+", plus);
-    puncMap.insert("*", star);
-    puncMap.insert(",", comma);
-    puncMap.insert("//", slashslash);
+    puncMap.insert("(", LPAREN);
+    puncMap.insert(")", RPAREN);
+    puncMap.insert("{", LBRACE);
+    puncMap.insert("}", RBRACE);
+    puncMap.insert("=", EQU);
+    puncMap.insert("+", PLUS);
+    puncMap.insert("*", STAR);
+    puncMap.insert(",", COMMA);
+    puncMap.insert("//", SLASHSLASH);
 };
 
-extern void parse_init();
+extern void parseInit();
 
 int main(int argc, char ** argv) {
     if (argc < 2) {
@@ -142,12 +142,12 @@ int main(int argc, char ** argv) {
         if (token < 0) {
             exit(1);
         }
-        if (token == eof) {
+        if (token == _EOF) {
             break;
         }
-        tokens[token_n++] = token;
+        tokens[tokenN++] = token;
     }
-    parse_init();
+    parseInit();
 
     return 0;
 }

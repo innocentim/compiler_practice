@@ -2,28 +2,28 @@
 #define __LEX_HPP__
 
 enum tokenType {
-    identifier,
-    constant_int,
-    kwd_return,
-    lparen, // (
-    rparen, // )
-    lbrace, // {
-    rbrace, // }
-    equ, // =
-    plus, // +
-    star, // *
-    comma, // ,
-    slashslash, // //
-    eof
+    IDENTIFIER,
+    CONSTANT_INT,
+    KWD_RETURN,
+    LPAREN, // (
+    RPAREN, // )
+    LBRACE, // {
+    RBRACE, // }
+    EQU, // =
+    PLUS, // +
+    STAR, // *
+    COMMA, // ,
+    SLASHSLASH, // //
+    _EOF
 };
 
 class Token {
-    int _token;
+    int token;
 public:
     void * data;
-    Token(int _token = -1, void * data = 0) : _token(_token), data(data) {};
+    Token(int token = -1, void * data = 0) : token(token), data(data) {};
     operator int() {
-        return _token;
+        return token;
     };
 };
 #endif

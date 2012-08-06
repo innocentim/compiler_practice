@@ -27,20 +27,19 @@ public:
 };
 
 class TypeManager {
-    std::map<Identifier, const Type *> _map;
+	std::map<Identifier, const Type *> map;
 public:
     TypeManager() {};
     void init() {
         regi("int", Type::Int);
     };
-
     void regi(const char * s, const Type & type);
-    int count(const Identifier & iden) {
-        return _map.count(iden);
-    };
-    const Type & operator[] (const Identifier & type) {
-        return *_map[type];
-    };
+	int count(const Identifier & iden) {
+		return map.count(iden);
+	}
+	const Type & operator[](const Identifier & iden) {
+		return *map[iden];
+	}
 };
 
 class Operator {
@@ -51,10 +50,10 @@ public:
     static const Operator Pos;
     static const Operator Mul;
     enum OperatorType{
-        binary,
-        left_unary,
-        right_unary,
-        factor,
+        BINARY,
+        LEFT_UNARY,
+        RIGHT_UNARY,
+        FACTOR,
     };
     const int prec;
     const OperatorType type;
@@ -82,7 +81,7 @@ public:
         };
     };
 private:
-    std::map<const Operator *, Trie> _map;
+    std::map<const Operator *, Trie> map;
 public:
     const Operator * binOrLeftUnaryManager[256];
     const Operator * rightUnaryManager[256];
@@ -95,8 +94,8 @@ public:
     void regi(int tok, const Operator & op);
     void overload(const Operator & op, const std::list<const Type *> & types, Callback callback);
     Trie * operator[](const Operator & op) {
-        if (_map.count(&op)) {
-            return &_map[&op];
+        if (map.count(&op)) {
+            return &map[&op];
         }
         return NULL;
     };
@@ -110,7 +109,7 @@ public:
     std::map<Identifier, VarDef *> varManager;
 
     virtual void dump() const;
-    virtual llvm::Module * code_gen();
+    virtual llvm::Module * codeGen();
 };
 
 class Definition {
@@ -120,7 +119,7 @@ public:
 
     Definition(const Type & type, const Identifier & name) : type(type), name(name) {};
     virtual void dump() const = 0;
-    virtual llvm::Value * code_gen(const FuncDef * env) = 0;
+    virtual llvm::Value * codeGen(const FuncDef * env) = 0;
 };
 
 class VarDef : public Definition {
@@ -128,7 +127,7 @@ public:
     llvm::Value * value;
     VarDef(const Type & type, const Identifier & name) : Definition(type, name), value(NULL) {};
     virtual void dump() const;
-    virtual llvm::Value * code_gen(const FuncDef * env);
+    virtual llvm::Value * codeGen(const FuncDef * env);
 };
 
 class FuncDef : public Definition {
@@ -142,14 +141,14 @@ public:
 
     FuncDef(const Type & type, const Identifier & name, bool declare = false) : Definition(type, name), value(NULL), declare(declare) {};
     virtual void dump() const;
-    virtual llvm::Function * code_gen(const FuncDef * env);
+    virtual llvm::Function * codeGen(const FuncDef * env);
 };
 
 class Statement {
 public:
     Statement() {};
     virtual void dump() const = 0;
-    virtual llvm::Value * code_gen(const FuncDef * env) = 0;
+    virtual llvm::Value * codeGen(const FuncDef * env) = 0;
 };
 
 class Expr : public Statement {
@@ -158,21 +157,21 @@ public:
 
     Expr() : type(NULL) {};
     virtual void dump() const = 0;
-    virtual llvm::Value * code_gen(const FuncDef * env) = 0;
+    virtual llvm::Value * codeGen(const FuncDef * env) = 0;
 };
 
 class FactorNode : public Expr {
 public:
     FactorNode() {};
     virtual void dump() const = 0;
-    virtual llvm::Value * code_gen(const FuncDef * env) = 0;
+    virtual llvm::Value * codeGen(const FuncDef * env) = 0;
 };
 
 class ConstantNode : public FactorNode {
 public:
     ConstantNode() {};
     virtual void dump() const = 0;
-    virtual llvm::Value * code_gen(const FuncDef * env) = 0;
+    virtual llvm::Value * codeGen(const FuncDef * env) = 0;
 };
 
 class ConstantNumNode : public ConstantNode {
@@ -181,7 +180,7 @@ public:
 
     ConstantNumNode(long long num) : num(num) {};
     virtual void dump() const;
-    virtual llvm::Value * code_gen(const FuncDef * env);
+    virtual llvm::Value * codeGen(const FuncDef * env);
 };
 
 class VarNode : public FactorNode {
@@ -190,7 +189,7 @@ public:
 
     VarNode(VarDef * var) : var(var) {};
     virtual void dump() const;
-    virtual llvm::Value * code_gen(const FuncDef * env);
+    virtual llvm::Value * codeGen(const FuncDef * env);
 };
 
 class CallNode : public FactorNode {
@@ -200,7 +199,7 @@ public:
 
     CallNode(FuncDef * func) : func(func) {};
     virtual void dump() const;
-    virtual llvm::Value * code_gen(const FuncDef * env);
+    virtual llvm::Value * codeGen(const FuncDef * env);
 };
 
 class OpNode : public Expr {
@@ -211,7 +210,7 @@ public:
 
     OpNode(const Operator * op) : op(op), left(NULL), right(NULL) {};
     virtual void dump() const;
-    virtual llvm::Value * code_gen(const FuncDef * env);
+    virtual llvm::Value * codeGen(const FuncDef * env);
 };
 
 class Return : public Statement {
@@ -220,7 +219,7 @@ public:
     
     Return(Expr * retExpr) : retExpr(retExpr) {};
     virtual void dump() const;
-    virtual llvm::Value * code_gen(const FuncDef * env);
+    virtual llvm::Value * codeGen(const FuncDef * env);
 };
 
 #endif

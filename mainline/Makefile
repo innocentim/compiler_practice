@@ -1,20 +1,20 @@
 TARGET = compiler
-OBJS = code_gen.o lex.o parse.o source_dump.o
+OBJS = codeGen.o lex.o parse.o sourceDump.o
 CPP = g++
-COMPILE_FLAGS = -Wall -c `llvm-config --cppflags`
+COMPILE_FLAGS = -Wall -g -c `llvm-config --cppflags`
 LINK_FLAGS = -Wall `llvm-config --ldflags --libs core`
 
 all : $(TARGET)
 
 $(TARGET) : $(OBJS)
 	$(CPP) -o $@ $^ $(LINK_FLAGS)
-code_gen.o : code_gen.cpp parse.hpp
+codeGen.o : codeGen.cpp parse.hpp
 	$(CPP) $< $(COMPILE_FLAGS)
 lex.o : lex.cpp lex.hpp
 	$(CPP) $< $(COMPILE_FLAGS)
 parse.o : parse.cpp parse.hpp lex.hpp
 	$(CPP) $< $(COMPILE_FLAGS)
-source_dump.o : source_dump.cpp parse.hpp
+sourceDump.o : sourceDump.cpp parse.hpp
 	$(CPP) $< $(COMPILE_FLAGS)
 
 clean :
