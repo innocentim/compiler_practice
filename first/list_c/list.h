@@ -22,62 +22,62 @@
 #define list_destory(T) _list_destory(T)
 
 struct _list_node(TEMPLATE) {
-    TEMPLATE data;
-    struct _list_node(TEMPLATE) * next;
-    struct _list_node(TEMPLATE) * prev;
+	TEMPLATE data;
+	struct _list_node(TEMPLATE) * next;
+	struct _list_node(TEMPLATE) * prev;
 };
 
 struct list(TEMPLATE) {
-    struct _list_node(TEMPLATE) head[1];
+	struct _list_node(TEMPLATE) head[1];
 };
 
 void _insert(TEMPLATE)(struct list(TEMPLATE) * this, TEMPLATE _data, struct _list_node(TEMPLATE) * now) {
-    struct _list_node(TEMPLATE) * new_node = malloc(sizeof(struct _list_node(TEMPLATE)));
-    new_node->data = _data;
-    new_node->next = now;
-    new_node->prev = now->prev;
-    new_node->prev->next = new_node;
-    new_node->next->prev = new_node;
+	struct _list_node(TEMPLATE) * new_node = malloc(sizeof(struct _list_node(TEMPLATE)));
+	new_node->data = _data;
+	new_node->next = now;
+	new_node->prev = now->prev;
+	new_node->prev->next = new_node;
+	new_node->next->prev = new_node;
 };
 
 TEMPLATE _remove(TEMPLATE)(struct list(TEMPLATE) * this, struct _list_node(TEMPLATE) * deleted) {
-    TEMPLATE ret = this->head->next->data;
-    if (deleted != this->head) {
-        deleted->prev->next = deleted->next;
-        deleted->next->prev = deleted->next;
-        free(deleted);
-    }
-    return ret;
+	TEMPLATE ret = this->head->next->data;
+	if (deleted != this->head) {
+		deleted->prev->next = deleted->next;
+		deleted->next->prev = deleted->next;
+		free(deleted);
+	}
+	return ret;
 };
 
 void list_init(TEMPLATE)(struct list(TEMPLATE) * this) {
-    this->head->next = this->head;
-    this->head->prev = this->head;
+	this->head->next = this->head;
+	this->head->prev = this->head;
 };
 
 void list_push_front(TEMPLATE)(struct list(TEMPLATE) * this, TEMPLATE _data) {
-    _insert(TEMPLATE)(this, _data, this->head);
+	_insert(TEMPLATE)(this, _data, this->head);
 };
 
 TEMPLATE list_pop_front(TEMPLATE)(struct list(TEMPLATE) * this) {
-    return _remove(TEMPLATE)(this, this->head->next);
+	return _remove(TEMPLATE)(this, this->head->next);
 };
 
 void list_push_back(TEMPLATE)(struct list(TEMPLATE) * this, TEMPLATE _data) {
-    _insert(TEMPLATE)(this, _data, this->head->prev);
+	_insert(TEMPLATE)(this, _data, this->head->prev);
 };
 
 TEMPLATE list_pop_back(TEMPLATE)(struct list(TEMPLATE) * this) {
-    return _remove(TEMPLATE)(this, this->head->prev);
+	return _remove(TEMPLATE)(this, this->head->prev);
 };
 
 void list_destory(TEMPLATE)(struct list(TEMPLATE) * this) {
-    struct _list_node(TEMPLATE) * temp;
-    for (temp = this->head->next; temp != this->head;) {
-        struct _list_node(TEMPLATE) * next = temp->next;
-        free(temp);
-        temp = next;
-    }
+	struct _list_node(TEMPLATE) * temp;
+	for (temp = this->head->next; temp != this->head;) {
+		struct _list_node(TEMPLATE) * next = temp->next;
+		free(temp);
+		temp = next;
+	}
 };
 
 #undef __list_node
