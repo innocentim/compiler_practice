@@ -5,6 +5,7 @@
 #include <llvm/Constants.h>
 #include <vector>
 #include <cstdio>
+#include <string>
 
 #define error(s) do { fprintf(stderr, "error: %s\n", s); exit(1); } while (0)
 
@@ -188,7 +189,8 @@ Value * mul_call_back(const FuncDef *env, const std::list<Value *> & args, const
 };
 
 void codeGen() {
-	module.setTargetTriple("x86_64-linux-gnu");
+	//const char * triple = "x86_64-unknown-linux-gnu";
+	//module.setTargetTriple(triple);
 	std::list<const ::Type *> types;
 	types.push_back(&::Type::Int);
 	top.opManager.overload(Operator::Pos, types, pos_call_back);
@@ -201,5 +203,5 @@ void codeGen() {
 	top.codeGen()->dump();
 	system("llc -o out.s out.ll");
 	system("as -o out.o out.s");
-	system("ld -o a.out -dynamic-linker /lib64/ld-linux-x86-64.so.2 /usr/lib/x86_64-linux-gnu/crt1.o /usr/lib/gcc/x86_64-linux-gnu/4.6/crtbegin.o /usr/lib/x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/4.6/crtend.o /usr/lib/x86_64-linux-gnu/crtn.o out.o -lc");
+	system("ld -o a.out -dynamic-linker /lib64/ld-linux-x86-64.so.2 /usr/lib/crt1.o /usr/lib/crti.o /usr/lib/crtn.o out.o -lc");
 };
