@@ -1,10 +1,10 @@
 #include <cstdio>
 #include "parse.hpp"
 
-static int iden = 0;
+static int indent = 0;
 
 void printIden() {
-	for (int i = iden; i > 0; i--) {
+	for (int i = indent; i > 0; i--) {
 		printf("	");
 	}
 }
@@ -41,7 +41,7 @@ void FuncDef::dump() const {
 		}
 	}
 	printf(") {\n");
-	iden++;
+	indent++;
 	{
 		std::map<std::string, VarDef *>::const_iterator iter;
 		for (iter = varManager.begin(); iter != varManager.end(); ++iter) {
@@ -58,7 +58,7 @@ void FuncDef::dump() const {
 			printf("\n");
 		}
 	}
-	iden--;
+	indent--;
 	printf("}\n");
 };
 
