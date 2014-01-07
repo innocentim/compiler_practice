@@ -1,7 +1,7 @@
 #include "lex.hpp"
 #include "parse.hpp"
-#include <llvm/Type.h>
-#include <llvm/DerivedTypes.h>
+#include <llvm/IR/Type.h>
+#include <llvm/IR/DerivedTypes.h>
 #include <list>
 #include <map>
 #include <string>

@@ -1,8 +1,8 @@
 #ifndef __PARSER_HPP__
 #define __PARSER_HPP__
 
-#include <llvm/LLVMContext.h>
-#include <llvm/Module.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Module.h>
 #include <string>
 #include <list>
 #include <map>

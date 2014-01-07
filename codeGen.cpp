@@ -1,8 +1,8 @@
 #include "parse.hpp"
-#include <llvm/LLVMContext.h>
-#include <llvm/Module.h>
-#include <llvm/Instructions.h>
-#include <llvm/Constants.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/Instructions.h>
+#include <llvm/IR/Constants.h>
 #include <vector>
 #include <cstdio>
 #include <string>
